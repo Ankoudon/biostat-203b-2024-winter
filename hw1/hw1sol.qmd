@@ -270,23 +270,25 @@ Compressed gz file doesn't take up much storage space, but it takes longer to ru
 1.  You and your friend just have finished reading *Pride and Prejudice* by Jane Austen. Among the four main characters in the book, Elizabeth, Jane, Lydia, and Darcy, your friend thinks that Darcy was the most mentioned. You, however, are certain it was Elizabeth. Obtain the full text of the novel from <http://www.gutenberg.org/cache/epub/42671/pg42671.txt> and save to your local folder.
 
 ```{bash}
-#| eval: false
-wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
+#Check
+wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt -P ~/
 ```
 
 ##### Explain what `wget -nc` does. Do **not** put this text file `pg42671.txt` in Git.
 
-"wget" downloads files from some URL only if the file doesn't already exist locally or if the local file has to be updated. If the file exists and is up-to-date, "wget" will not download it again.
+**Explanation:**
+
+"wget" downloads files from some URL. "-nc" means only if the file doesn't already exist locally or if the local file has to be updated, the file will be downloaded.
 
 Complete the following loop to tabulate the number of times each of the four characters is mentioned using Linux commands.
 
 ```{bash}
-#| eval: false
-wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
+# Check
+#wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
 for char in Elizabeth Jane Lydia Darcy
 do
   echo $char:
-  grep -io $char pg42671.txt | wc -l 
+  grep -io $char ~/pg42671.txt | wc -l 
 done
 ```
 
@@ -294,15 +296,25 @@ done
 
 ```{bash}
 #| eval: false
-echo 'hello, world' > test1.txt
+echo 'hello, world' > ~/test1.txt
 ```
 
 and
 
 ```{bash}
 #| eval: false
-echo 'hello, world' >> test2.txt
+echo 'hello, world' >> ~/test2.txt
 ```
+
+## Explanation:
+
+**echo 'hello, world' \> \~/test1.txt:**
+
+This command will create or overwrite a file called "test1.txt" and write "hello, world" in it.
+
+**echo 'hello, world' \>\> \~/test2.txt:**
+
+This command will append "hello, world" in the last line of the file in the existing "test2.txt" file. If the "test2.txt" file does not exist, this command makes "test2.txt" and write "hello, world" in it.
 
 3.  Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
 
@@ -317,10 +329,14 @@ Using `chmod` to make the file executable by the owner, and run
 
 ```{bash}
 #| eval: false
-./middle.sh pg42671.txt 20 5
+~/middle.sh ~/pg42671.txt 20 5
 ```
 
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
+
+**Explanation:**
+
+\$1 specifies a file. \$2 specifies the end line you extract. \$3 specifies the number of lines you extract. The first line of the shell script is called "shebang" and it tells the computer which interpreter to use to execute the script.
 
 ## Q5. More fun with Linux
 
