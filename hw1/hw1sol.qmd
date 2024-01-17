@@ -260,8 +260,8 @@ time zcat < ~/mimic/hosp/labevents.csv.gz | wc -l
 ```{bash}
 time wc -l ~/mimic/hosp/labevents.csv
 ```
-**Conclusion:**
 
+**Conclusion:**
 
 Compressed gz file doesn't take up much storage space, but it takes longer to run. Uncompressed file takes up more storage space, but it takes shorter to run. It's a trade off between storage and speed for big data files.
 
