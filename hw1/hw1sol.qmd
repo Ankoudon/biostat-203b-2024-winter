@@ -57,6 +57,8 @@ sessionInfo()
 
 5.  After this course, you can make this repository public and use it to demonstrate your skill sets on job market.
 
+    Okay.
+
 ## Q2. Data ethics training
 
 This exercise (and later in this course) uses the [MIMIC-IV data v2.2](https://physionet.org/content/mimiciv/2.2/), a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <https://mimic.mit.edu/docs/gettingstarted/> to (1) complete the CITI `Data or Specimens Only Research` course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. **You must complete Q2 before working on the remaining questions.** (Hint: The CITI training takes a few hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)
@@ -76,7 +78,6 @@ This exercise (and later in this course) uses the [MIMIC-IV data v2.2](https://p
 1.  Make the MIMIC v2.2 data available at location `~/mimic`.
 
 ```{bash}
-#| eval: false
 ls -l ~/mimic/
 ```
 
@@ -86,35 +87,39 @@ Use Bash commands to answer following questions.
 
 2.  Display the contents in the folders `hosp` and `icu` using Bash command `ls -l`. Why are these data files distributed as `.csv.gz` files instead of `.csv` (comma separated values) files? Read the page <https://mimic.mit.edu/docs/iv/> to understand what's in each folder.
 
-**Answer:**These data files are distributed as ".csv.gz" files instead of ".csv" files because ".csv.gz" files are compressed files. Compressed files take up less storage space than uncompressed files. This is why these data files are distributed as ".csv.gz" files instead of ".csv" files. and use less bandwidth when transferred over the network. This is why these data files are distributed as ".csv.gz" files instead of ".csv" files.
+**Answer:**
+
+Compressed files take up less storage space than uncompressed files and use less bandwidth when transferred over the network. This is why these data files are distributed as ".csv.gz" files instead of ".csv" files.
+
+**hosp:**
 
 ```{bash}
 ls -l ~/mimic/hosp
 ```
 
+**icu:**
+
 ```{bash}
 ls -l ~/mimic/icu 
 ```
 
-".csv.gz" files reduce file size and saves storage space. That's why they are used instead of ".csv" files.
-
 3.  Briefly describe what Bash commands `zcat`, `zless`, `zmore`, and `zgrep` do.
 
-    (zcat)
+    **zcat:**
 
-    "zcat" can display the contents of compressed files. This means "zcat" displays the contents of a compressed file without actually decompressing it.
+    "zcat" can display the contents of compressed files without actually decompressing it.
 
-    (zless)
+    **zless:**
 
-    "zless" can display the contents of compressed files in a scrollable manner. This means "zless" displays the contents of a compressed file without actually decompressing it.
+    "zless" can display the contents of compressed files in a scrollable manner without actually decompressing it.
 
-    (zmore)
+    **zmore:**
 
-    "zmore" can display the contents of compressed files line by line. This means "zmore" displays the contents of a compressed file without actually decompressing it.
+    "zmore" can display the contents of compressed files line by line without actually decompressing it.
 
-    (zgrep)
+    **zgrep:**
 
-    "zgrep" can extract a specific string or pattern within a compressed files.
+    "zgrep" can extract a specific string or pattern within a compressed files without actually decompressing it.
 
 4.  (Looping in Bash) What's the output of the following bash script?
 
