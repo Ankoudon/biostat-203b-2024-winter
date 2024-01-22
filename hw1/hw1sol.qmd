@@ -1,7 +1,8 @@
 ---
 title: "Biostat 203B Homework 1"
 subtitle: Due Jan 26, 2024 @ 11:59PM
-author: "Hiroyasu Ando, UID: 605948443"
+author: "Hiroyasu Ando",
+UID: "605948443",
 format:
   html:
     theme: cosmo
