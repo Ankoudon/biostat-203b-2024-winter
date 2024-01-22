@@ -328,6 +328,10 @@ head -n "$2" "$1" | tail -n "$3"
 Using `chmod` to make the file executable by the owner, and run
 
 ```{bash}
+chmod u+x middle.sh
+```
+
+```{bash}
 ./middle.sh pg42671.txt 20 5
 ```
 
