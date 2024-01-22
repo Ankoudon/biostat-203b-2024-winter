@@ -1,8 +1,7 @@
 ---
 title: "Biostat 203B Homework 1"
 subtitle: Due Jan 26, 2024 @ 11:59PM
-author: "Hiroyasu Ando",
-UID: "605948443",
+author: "Hiroyasu Ando, UID: 605948443"
 format:
   html:
     theme: cosmo
@@ -35,7 +34,7 @@ sessionInfo()
 
 1.  Apply for the [Student Developer Pack](https://education.github.com/pack) at GitHub using your UCLA email. You'll get GitHub Pro account for free (unlimited public and private repositories).
 
-    I got GitHub Pro account.
+    I applied for the Student Developer Pack and got GitHub Pro account.
 
     ![](images/Screenshot%202024-01-16%20at%2010.57.31.png){width="196"}
 
@@ -54,7 +53,7 @@ sessionInfo()
 
 4.  After each homework due date, course reader and instructor will check out your `main` branch for grading. Tag each of your homework submissions with tag names `hw1`, `hw2`, ... Tagging time will be used as your submission time. That means if you tag your `hw1` submission after deadline, penalty points will be deducted for late submission.
 
-    Not yet.
+    Okay.
 
 5.  After this course, you can make this repository public and use it to demonstrate your skill sets on job market.
 
@@ -64,15 +63,17 @@ sessionInfo()
 
 This exercise (and later in this course) uses the [MIMIC-IV data v2.2](https://physionet.org/content/mimiciv/2.2/), a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <https://mimic.mit.edu/docs/gettingstarted/> to (1) complete the CITI `Data or Specimens Only Research` course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. **You must complete Q2 before working on the remaining questions.** (Hint: The CITI training takes a few hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)
 
-\(1\) Completion report
+\(1\) Completion report (CITI)
 
 <https://www.citiprogram.org/verify/?k9cad851b-7215-4e9d-84a9-93d8ee84720e-60469675>
 
-\(2\) Completion certificate
+\(2\) Completion certificate (CITI)
 
 <https://www.citiprogram.org/verify/?wfe307642-6687-49de-a08c-4155771715ed-60469675>
 
-###########ADD PhysioNet!!!
+\(3\) PhysioNet credentialing
+
+![](images/Screenshot%202024-01-22%20at%209.51.25.png)
 
 ## Q3. Linux Shell Commands
 
@@ -125,7 +126,6 @@ ls -l ~/mimic/icu
 4.  (Looping in Bash) What's the output of the following bash script?
 
 ```{bash}
-#| eval: false
 for datafile in ~/mimic/hosp/{a,l,pa}*.gz
 do
   ls -l $datafile
@@ -162,7 +162,7 @@ zcat < ~/mimic/hosp/admissions.csv.gz | wc -l
 zcat < ~/mimic/hosp/admissions.csv.gz | tail -n +2 | awk -F',' '{ print $1 }' | sort | uniq |wc -l
 ```
 
-**Rows, patients.csv.gz:**
+**Patients, patients.csv.gz:**
 
 ```{bash}
 zcat < ~/mimic/hosp/patients.csv.gz | tail -n +2 | wc -l
@@ -271,7 +271,6 @@ Compressed gz file doesn't take up much storage space, but it takes longer to ru
 1.  You and your friend just have finished reading *Pride and Prejudice* by Jane Austen. Among the four main characters in the book, Elizabeth, Jane, Lydia, and Darcy, your friend thinks that Darcy was the most mentioned. You, however, are certain it was Elizabeth. Obtain the full text of the novel from <http://www.gutenberg.org/cache/epub/42671/pg42671.txt> and save to your local folder.
 
 ```{bash}
-# check
 wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt 
 ```
 
@@ -329,12 +328,16 @@ head -n "$2" "$1" | tail -n "$3"
 Using `chmod` to make the file executable by the owner, and run
 
 ```{bash}
+chmod u+x middle.sh
+```
+
+```{bash}
 ./middle.sh pg42671.txt 20 5
 ```
 
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
 
-**Explanation:**
+**Explanation:** This script takes the first 20 lines of the file "pg42671.txt" and then takes the last 5 lines of the first 20 lines.
 
 \$1 specifies a file. \$2 specifies the end line you extract. \$3 specifies the number of lines you extract. The first line of the shell script is called "shebang" and it tells the computer which interpreter to use to execute the script.
 
