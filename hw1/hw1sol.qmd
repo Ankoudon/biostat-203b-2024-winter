@@ -137,7 +137,7 @@ Display the number of lines in each data file using a similar loop. (Hint: combi
 ```{bash}
 for datafile in ~/mimic/hosp/{a,l,pa}*.gz
 do
-zcat < $datafile | wc -l
+  zcat < $datafile | wc -l
 done
 ```
 
@@ -176,7 +176,7 @@ zcat < ~/mimic/hosp/patients.csv.gz | tail -n +2 | awk -F',' '{ print $1 }' | so
 
 **Conclusion:**
 
-They are not the same.
+They do not match the number of patients listed in the patients.csv.gz file.
 
 6.  What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, and `ethnicity`? Also report the count for each unique value of these variables. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq -c`, `wc`, and so on; skip the header line.
 
@@ -288,7 +288,7 @@ Complete the following loop to tabulate the number of times each of the four cha
 for char in Elizabeth Jane Lydia Darcy
 do
   echo $char:
-  grep -io $char pg42671.txt | wc -l 
+  grep -i $char pg42671.txt | wc -l 
 done
 ```
 
@@ -337,7 +337,7 @@ chmod u+x middle.sh
 
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
 
-**Explanation:** This script takes the first 20 lines of the file "pg42671.txt" and then takes the last 5 lines of the first 20 lines.
+**Explanation:** This script takes the first 20 lines of the file "pg42671.txt" and then takes the last 5 lines of the first 20 lines, which is the output.
 
 \$1 specifies a file. \$2 specifies the end line you extract. \$3 specifies the number of lines you extract. The first line of the shell script is called "shebang" and it tells the computer which interpreter to use to execute the script.
 
