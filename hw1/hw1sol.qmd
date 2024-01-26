@@ -37,7 +37,7 @@ sessionInfo()
 
     I applied for the Student Developer Pack and got GitHub Pro account.
 
-    ![](images/Q1-1.png){width="140"}
+    ![](images/Q1-1.png){width="160"}
 
 2.  Create a **private** repository `biostat-203b-2024-winter` and add `Hua-Zhou` and TA team (`Tomoki-Okuno` for Lec 1; `jonathanhori` and `jasenzhang1` for Lec 80) as your collaborators with write permission.
 
