@@ -37,7 +37,7 @@ sessionInfo()
 
     I applied for the Student Developer Pack and got GitHub Pro account.
 
-    ![](images/Screenshot%202024-01-16%20at%2010.57.31.png){width="196"}
+    ![](images/Q1-1.png){width="140"}
 
 2.  Create a **private** repository `biostat-203b-2024-winter` and add `Hua-Zhou` and TA team (`Tomoki-Okuno` for Lec 1; `jonathanhori` and `jasenzhang1` for Lec 80) as your collaborators with write permission.
 
@@ -45,7 +45,7 @@ sessionInfo()
 
     It's done.
 
-    ![](images/Screenshot%202024-01-16%20at%2011.17.41.png){width="325"}
+    ![](images/Q1-2.png){width="333"}
 
 3.  Top directories of the repository should be `hw1`, `hw2`, ... Maintain two branches `main` and `develop`. The `develop` branch will be your main playground, the place where you develop solution (code) to homework problems and write up report. The `main` branch will be your presentation area. Submit your homework files (Quarto file `qmd`, `html` file converted by Quarto, all code and extra data sets to reproduce results) in the `main` branch.
 
@@ -53,7 +53,7 @@ sessionInfo()
 
     It's done.
 
-    ![](images/Screenshot%202024-01-16%20at%2011.18.35-01.png)
+    ![](images/Q1-3.png){width="382"}
 
 4.  After each homework due date, course reader and instructor will check out your `main` branch for grading. Tag each of your homework submissions with tag names `hw1`, `hw2`, ... Tagging time will be used as your submission time. That means if you tag your `hw1` submission after deadline, penalty points will be deducted for late submission.
 
@@ -83,7 +83,7 @@ This exercise (and later in this course) uses the [MIMIC-IV data v2.2](https://p
 
 (3) PhysioNet credentialing
 
-![](images/Screenshot%202024-01-22%20at%209.51.25.png)
+![](images/Q2.png)
 
 ## Q3. Linux Shell Commands
 
@@ -425,7 +425,7 @@ chmod +x middle.sh
 
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
 
-**Explanation:** 
+**Explanation:**
 
 This script takes the first 20 lines of the file "pg42671.txt" and then takes the last 5 lines of the first 20 lines, which is the output.
 
@@ -515,7 +515,7 @@ This command displays the information about the currently logged in user, such a
 who
 ```
 
-**w** 
+**w**
 
 In the first line, this command displays the current time, how long the computer has been running, how many users are currently logged on, and the system load averages for the past 1, 5, and 15 minutes. In the subsequent lines, this command displays the information about the currently logged in user, such as username, terminal, log-in time, idle time, current process, and command-line shells.
 
@@ -569,21 +569,17 @@ history | tail
 
 **Answer:**
 
-       
 I did it.
 
-![](images/Screenshot%202024-01-19%20at%2015.56.53.png)
-
+![](images/Q6-1.png){width="346"}
 
 2.  Open the project by clicking `rep-res-3rd-edition.Rproj` and compile the book by clicking `Build Book` in the `Build` panel of RStudio. (Hint: I was able to build `git_book` and `epub_book` but not `pdf_book`.)
 
 **Answer:**
 
-     
 I did it.
 
-![](images/Screenshot%202024-01-19%20at%2016.06.49.png)
-
+![](images/Q6-2.png)
 
 The point of this exercise is (1) to get the book for free and (2) to see an example how a complicated project such as a book can be organized in a reproducible way.
 
@@ -591,4 +587,4 @@ For grading purpose, include a screenshot of Section 4.1.5 of the book here.
 
 **Answer:**
 
-![](images/Screenshot%202024-01-19%20at%2016.07.12-01.png)
+![](images/Q6-3.png)
