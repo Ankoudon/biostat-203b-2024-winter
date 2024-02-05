@@ -176,12 +176,6 @@ However, It should be noted that these results might be different depending on t
 
 ## Q2. Ingest big data files
 
-<p align="center">
-
-<img src="./bigfile.png" width="50%"/>
-
-</p>
-
 Let us focus on a bigger file, `labevents.csv.gz`, which is about 125x bigger than `admissions.csv.gz`.
 
 ```{bash}
@@ -195,12 +189,6 @@ zcat < ~/mimic/hosp/labevents.csv.gz | head -10
 ```
 
 ### Q2.1 Ingest `labevents.csv.gz` by `read_csv`
-
-<p align="center">
-
-<img src="./readr_logo.png" width="20%"/>
-
-</p>
 
 Try to ingest `labevents.csv.gz` using `read_csv`. What happens? If it takes more than 5 minutes on your computer, then abort the program and report your findings.
 
@@ -340,7 +328,9 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
 
 Write a few sentences to explain what is Apache Arrow. Imagine you want to explain it to a layman in an elevator.
 
-**Answer:** ???
+**Answer:**
+
+Apache Arrow is a cross-language development platform for in-memory data. It is designed to be fast and efficient for analytical queries. It is designed to be easy to use and to be able to handle large amounts of data.
 
 ### Q2.5 Compress `labevents.csv` to Parquet format and ingest/select/filter
 
@@ -393,7 +383,6 @@ open_dataset(sources = "./labevents.parquet", format = "parquet") |>
   nrow()
 ```
 
-
 **Answer**
 
 They matched those in Q2.3.
@@ -417,7 +406,7 @@ Write a few sentences to explain what is the Parquet format. Imagine you want to
 
 **Answer**
 
-!!!
+Parquet is a columnar storage format that is designed to be fast and efficient for analytical queries. It is designed to be easy to use and to be able to handle large amounts of data.
 
 ### Q2.6 DuckDB
 
@@ -487,7 +476,9 @@ open_dataset(sources = "./labevents.parquet",
 
 Write a few sentences to explain what is DuckDB. Imagine you want to explain it to a layman in an elevator.
 
-**Answer** ?????
+**Answer**
+
+DuckDB is a database management system that is designed to be embedded into another application. It is a relational database that is designed to be fast and efficient for analytical queries. It is designed to be easy to use and to be able to handle large amounts of data.
 
 ## Q3. Ingest and filter `chartevents.csv.gz`
 
