@@ -68,6 +68,10 @@ Which function is fastest? Is there difference in the (default) parsed data type
 
 **Run times:**
 
+"fread" is the fastest. However, It should be noted that these results might be different depending on the computer environment.
+
+However, It should be noted that these results might be different depending on the computer environment.
+
 ```{r}
 system.time(read.csv("~/mimic/hosp/admissions.csv.gz"))
 ```
@@ -81,6 +85,8 @@ system.time(fread("~/mimic/hosp/admissions.csv.gz"))
 ```
 
 **Memory usages:**
+
+The memory usage of "read.csv" is the largest, and the memory usage of "fread" is the smallest. However, It should be noted that these results might be different depending on the computer environment.
 
 ```{r}
 object_size(read.csv("~/mimic/hosp/admissions.csv.gz"))
@@ -96,6 +102,12 @@ object_size(fread("~/mimic/hosp/admissions.csv.gz"))
 
 **The default data types:**
 
+I will briefly explain the difference below.
+
+"read.csv" reads numbers as the "int" data type, the others as the "chr" data type. "read_csv" reads "numbers as the "num" data type, dates as the "POSIXct" data type, and the others as the chr data type. "fread" reads numbers as the "int" data type, dates as the "POSIXct" data type, and the others as the "chr" data type.
+
+However, It should be noted that these results might be different depending on the computer environment.
+
 ```{r}
 str(read.csv("~/mimic/hosp/admissions.csv.gz"))
 ```
@@ -108,21 +120,13 @@ str(read_csv("~/mimic/hosp/admissions.csv.gz"))
 str(fread("~/mimic/hosp/admissions.csv.gz"))
 ```
 
-**Answer:**
-
-\(1\) "fread" is the fastest.
-
-\(2\) The memory usage of "read.csv" is the largest, and the memory usage of "fread" is the smallest.
-
-However, It should be noted that these results might be different depending on the computer environment.
-
-\(3\) "read.csv" read "num", "chr",and "POSIXct" data types. "read_csv" read "num", "chr",and "POSIXct" data types. "fread" read "int", "chr", and "POSIXct" data types. "fread" might be different from the other two in terms of the "int" data type.
-
 ### Q1.2 User-supplied data types
 
 Re-ingest `admissions.csv.gz` by indicating appropriate column data types in `read_csv`. Does the run time change? How much memory does the result tibble use? (Hint: `col_types` argument in `read_csv`.)
 
 **Run times:**
+
+The run time became faster. However, It should be noted that these results might be different depending on the computer environment.
 
 ```{r}
 system.time(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
@@ -147,6 +151,10 @@ system.time(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
 
 **Memory use:**
 
+The memory usage became smaller (55.31MB -\> 41.51MB).
+
+However, It should be noted that these results might be different depending on the computer environment.
+
 ```{r}
 object_size(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
   subject_id = col_double(),
@@ -167,12 +175,6 @@ object_size(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
   hospital_expire_flag = col_factor()
 )))
 ```
-
-**Answer:**
-
-The run time became faster and the memory usage became smaller (55.31MB -\> 41.51MB).
-
-However, It should be noted that these results might be different depending on the computer environment.
 
 ## Q2. Ingest big data files
 
