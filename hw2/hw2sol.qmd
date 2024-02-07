@@ -178,6 +178,10 @@ object_size(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
 
 ## Q2. Ingest big data files
 
+<p align="center">
+  <img src="./image/bigfile.png" width="50%"/>
+</p>
+
 Let us focus on a bigger file, `labevents.csv.gz`, which is about 125x bigger than `admissions.csv.gz`.
 
 ```{bash}
@@ -192,11 +196,15 @@ zcat < ~/mimic/hosp/labevents.csv.gz | head -10
 
 ### Q2.1 Ingest `labevents.csv.gz` by `read_csv`
 
+<p align="center">
+  <img src="./image/readr_logo.png" width="20%"/>
+</p>
+
 Try to ingest `labevents.csv.gz` using `read_csv`. What happens? If it takes more than 5 minutes on your computer, then abort the program and report your findings.
 
 **Answer:**
 
-This program took more than 5 minutes on my computer, so I aborted the program. Since my computer has 16GB memory, it is not sufficient to read this csv.
+This program took more than 5 minutes on my computer, so I aborted the program. Since my computer has 16GB memory, my computer cannot handle this big data file.
 
 ```{r}
 #| eval: false
@@ -222,6 +230,10 @@ system.time(read_csv("~/mimic/hosp/labevents.csv.gz", col_select = c(
 
 ### Q2.3 Ingest subset of `labevents.csv.gz`
 
+<p align="center">
+  <img src="./image/linux_logo.png" width="20%"/>
+</p>
+
 Our first strategy to handle this big data file is to make a subset of the `labevents` data. Read the [MIMIC documentation](https://mimic.mit.edu/docs/iv/modules/hosp/labevents/) for the content in data file `labevents.csv`.
 
 In later exercises, we will only be interested in the following lab items: creatinine (50912), potassium (50971), sodium (50983), chloride (50902), bicarbonate (50882), hematocrit (51221), white blood cell count (51301), and glucose (50931) and the following columns: `subject_id`, `itemid`, `charttime`, `valuenum`. Write a Bash command to extract these columns and rows from `labevents.csv.gz` and save the result to a new file `labevents_filtered.csv.gz` in the current working directory. (Hint: use `zcat <` to pipe the output of `labevents.csv.gz` to `awk` and then to `gzip` to compress the output. To save render time, put `#| eval: false` at the beginning of this code chunk.)
@@ -238,13 +250,15 @@ print $2,$5,$7,$10}' | gzip > ./labevents_filtered.csv.gz
 
 Display the first 10 lines of the new file `labevents_filtered.csv.gz`. How many lines are in this new file? How long does it take `read_csv` to ingest `labevents_filtered.csv.gz`?
 
-**Answer:** The first 10 lines of the new file `labevents_filtered.csv.gz` are as follows:
+**Display the first 10 lines**
+
+The first 10 lines of the new file `labevents_filtered.csv.gz` are as follows:
 
 ```{bash}
 zcat < ./labevents_filtered.csv.gz | head -10
 ```
 
-**Answer:**
+**The number of lines**
 
 There are 24855909 lines.
 
@@ -252,7 +266,7 @@ There are 24855909 lines.
 zcat < ./labevents_filtered.csv.gz | wc -l
 ```
 
-**Answer:**
+**Time**
 
 It takes around 13 seconds to ingest `labevents_filtered.csv.gz`. However, it should be noted that this result might be different depending on the computer environment.
 
@@ -262,9 +276,15 @@ system.time(read_csv("./labevents_filtered.csv.gz"))
 
 ### Q2.4 Ingest `labevents.csv` by Apache Arrow
 
+<p align="center">
+  <img src="./image/arrow_logo.png" width="30%"/>
+</p>
+
 Our second strategy is to use [Apache Arrow](https://arrow.apache.org/) for larger-than-memory data analytics. Unfortunately Arrow does not work with gz files directly. First decompress `labevents.csv.gz` to `labevents.csv` and put it in the current working directory. To save render time, put `#| eval: false` at the beginning of this code chunk.
 
-**Answer:**
+**Decompress the csv file**
+
+I decompressed `labevents.csv.gz` to `labevents.csv` and put it in "~/mimic/hosp/".
 
 ```{bash}
 #| eval: false
@@ -273,9 +293,9 @@ gzip -dk < ~/mimic/hosp/labevents.csv.gz > ~/mimic/hosp/labevents.csv
 
 Then use [`arrow::open_dataset`](https://arrow.apache.org/docs/r/reference/open_dataset.html) to ingest `labevents.csv`, select columns, and filter `itemid` as in Q2.3. How long does the ingest+select+filter process take? Display the number of rows and the first 10 rows of the result tibble, and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
-**Answer:**
+**Time**
 
-It takes less than one second to ingest `labevents.csv`. However, it should be noted that this result might be different depending on the computer environment.
+It takes less than one second. However, it should be noted that this result might be different depending on the computer environment.
 
 ```{r}
 system.time(open_dataset(sources = "~/mimic/hosp/labevents.csv",
@@ -291,7 +311,7 @@ system.time(open_dataset(sources = "~/mimic/hosp/labevents.csv",
                        50931)))
 ```
 
-**Answer**
+**The number of rows**
 
 The number of rows is 24855909.
 
@@ -309,9 +329,11 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
   nrow()
 ```
 
-**Answer**
+**Display the first 10 lines**
 
-They matched those in Q2.3.
+They matched those in Q2.3 other than "charttime". This is because in Q2.3, "charttime" is in UTC, but in Q2.4 "charttime" is in the local time, America/Los_Angeles. (According to the sessionInfo(), my timezone is "America/Los_Angeles"). 
+
+That is why, I changed the timezone to "US/Eastern" (authentic one) in Q2.4.
 
 ```{r}
 open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |> 
@@ -325,20 +347,28 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
                        51301,
                        50931)) |> 
   as_tibble()  |>
+  mutate(
+    charttime = with_tz(charttime, "US/Eastern")
+  ) |>
+  arrange(subject_id) |>
   print(n=10)
 ```
 
 Write a few sentences to explain what is Apache Arrow. Imagine you want to explain it to a layman in an elevator.
 
-**Answer:**
+**Explain what is Apache Arrow**
 
-Apache Arrow is a cross-language development platform for in-memory data. It is designed to be fast and efficient for analytical queries. It is designed to be easy to use and to be able to handle large amounts of data.
+Apache Arrow is an in-memory data platform for cross-language. Apache Arrow allows us to handle large amounts of data efficiently and at high speeds, including data exchange. 
 
 ### Q2.5 Compress `labevents.csv` to Parquet format and ingest/select/filter
 
+<p align="center">
+  <img src="./image/parquet_logo.png" width="30%">
+</p>
+
 Re-write the csv file `labevents.csv` in the binary Parquet format (Hint: [`arrow::write_dataset`](https://arrow.apache.org/docs/r/reference/write_dataset.html).) How large is the Parquet file(s)? How long does the ingest+select+filter process of the Parquet file(s) take? Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
-**Answer**
+**Re-write the csv file**
 
 The size of the Parquet file is 1.9GB.
 
@@ -349,9 +379,9 @@ write_dataset(
 )
 ```
 
-**Answer**
+**Time**
 
-It takes less than 1 second to ingest `labevents.parquet`. However, it should be noted that this result might be different depending on the computer environment.
+It takes less than 1 second. However, it should be noted that this result might be different depending on the computer environment.
 
 ```{r}
 system.time(open_dataset(sources = "./labevents.parquet",
@@ -367,7 +397,7 @@ system.time(open_dataset(sources = "./labevents.parquet",
                        50931)))
 ```
 
-**Answer**
+**The number of rows**
 
 The number of rows is 24855909.
 
@@ -385,9 +415,11 @@ open_dataset(sources = "./labevents.parquet", format = "parquet") |>
   nrow()
 ```
 
-**Answer**
+**Display the first 10 lines**
 
-They matched those in Q2.3.
+They matched those in Q2.3 other than "charttime". This is because, in Q2.3 "charttime" is in UTC, but in Q2.5 "charttime" is in the local time, America/Los_Angeles. (According to the sessionInfo(), my timezone is "America/Los_Angeles"). 
+
+That is why, I changed the timezone to "US/Eastern" (authentic one) in Q2.5.
 
 ```{r}
 open_dataset(sources = "./labevents.parquet", format = "parquet") |> 
@@ -401,20 +433,28 @@ open_dataset(sources = "./labevents.parquet", format = "parquet") |>
                        51301,
                        50931)) |> 
   as_tibble()  |>
+  mutate(
+    charttime = with_tz(charttime, "US/Eastern")
+  ) |>
+  arrange(subject_id) |>
   print(n=10)
 ```
 
 Write a few sentences to explain what is the Parquet format. Imagine you want to explain it to a layman in an elevator.
 
-**Answer**
+**explain what is the Parquet format**
 
-Parquet is a columnar storage format that is designed to be fast and efficient for analytical queries. It is designed to be easy to use and to be able to handle large amounts of data.
+This is a part of the Apache Arrow project. Parquet is a columnar storage format designed to handle large amounts of data at high speed and efficiency. In the Parquet format, the columns needed for the query are loaded, and the performance will be improved. 
 
 ### Q2.6 DuckDB
 
+<p align="center">
+  <img src="./image/duckdb_logo.png" width="20%">
+</p>
+
 Ingest the Parquet file, convert it to a DuckDB table by [`arrow::to_duckdb`](https://arrow.apache.org/docs/r/reference/to_duckdb.html), select columns, and filter rows as in Q2.5. How long does the ingest+convert+select+filter process take? Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
-**Answer**
+**Time**
 
 It takes less than 1 second to do ingest+convert+select+filter process. However, it should be noted that this result might be different depending on the computer environment.
 
@@ -433,7 +473,7 @@ system.time(open_dataset(sources = "./labevents.parquet",
                        50931)))
 ```
 
-**Answer**
+**The number of rows**
 
 The number of rows is 24855909.
 
@@ -454,9 +494,11 @@ open_dataset(sources = "./labevents.parquet",
   nrow()
 ```
 
-**Answer**
+**Display the first 10 lines**
 
-They match those in Q2.3.
+They matched those in Q2.3 other than "charttime". This is because, in Q2.3 "charttime" is in UTC, but in Q2.6 "charttime" is in the local time, America/Los_Angeles. (According to the sessionInfo(), my timezone is "America/Los_Angeles"). 
+
+That is why, I changed the timezone to "US/Eastern" (authentic one) in Q2.6.
 
 ```{r}
 open_dataset(sources = "./labevents.parquet",
@@ -472,15 +514,18 @@ open_dataset(sources = "./labevents.parquet",
                        51301,
                        50931)) |>
   as_tibble() |>
+  mutate(
+    charttime = with_tz(charttime, "US/Eastern")
+  ) |>
   arrange(subject_id) |>
   print(n=10)
 ```
 
 Write a few sentences to explain what is DuckDB. Imagine you want to explain it to a layman in an elevator.
 
-**Answer**
+**Explain what is DuckDB**
 
-DuckDB is a database management system that is designed to be embedded into another application. It is a relational database that is designed to be fast and efficient for analytical queries. It is designed to be easy to use and to be able to handle large amounts of data.
+DuckDB is an in-memory database management system designed for integration into other applications. Also, this is a relational database and is designed for fast and efficient execution of analytical queries.
 
 ## Q3. Ingest and filter `chartevents.csv.gz`
 
@@ -505,7 +550,6 @@ Document the steps and show code. Display the number of rows and the first 10 ro
 First, unzip `chartevents.csv.gz` and save it as \`chartevents.csv.
 
 ```{bash}
-#| eval: false
 gzip -dk < ~/mimic/icu/chartevents.csv.gz > ~/mimic/icu/chartevents.csv
 ```
 
@@ -518,7 +562,7 @@ write_dataset(
 )
 ```
 
-in addition, the number of rows is 22502319.
+The number of rows is 22502319.
 
 ```{r}
 open_dataset(sources = "./chartevents.parquet", format = "parquet") |> 
@@ -530,18 +574,25 @@ open_dataset(sources = "./chartevents.parquet", format = "parquet") |>
   nrow()
 ```
 
-Finally, ingest and filter `chartevents.parquet` to get the result tibble.
+Finally, ingest and filter `chartevents.parquet` to get the result tibble. Here, I extracted the first 10 rows of the result tibble (subject_id, itemid, charttime, valuenum). I specified the timezone of "charttime" to "US/Eastern" (authentic one).
 
 ```{r}
 open_dataset(sources = "./chartevents.parquet", format = "parquet") |> 
+  select(subject_id, itemid, charttime, valuenum) |> 
   filter(itemid %in% c(220045,
                        220181,
                        220179,
                        223761,
                        220210)) |> 
   as_tibble()  |>
+  mutate(
+    charttime = with_tz(charttime, "US/Eastern")
+  ) |>
+  arrange(subject_id) |>
   print(n=10)
 ```
+
+Delete the "chartevents.csv" file.
 
 ```{bash}
 rm ~/mimic/icu/chartevents.csv
