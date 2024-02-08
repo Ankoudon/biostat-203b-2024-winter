@@ -70,8 +70,6 @@ Which function is fastest? Is there difference in the (default) parsed data type
 
 "fread" is the fastest. However, It should be noted that these results might be different depending on the computer environment.
 
-However, It should be noted that these results might be different depending on the computer environment.
-
 ```{r}
 system.time(read.csv("~/mimic/hosp/admissions.csv.gz"))
 ```
@@ -104,7 +102,7 @@ object_size(fread("~/mimic/hosp/admissions.csv.gz"))
 
 I will briefly explain the difference below.
 
-"read.csv" reads numbers as the "int" data type, the others as the "chr" data type. "read_csv" reads "numbers as the "num" data type, dates as the "POSIXct" data type, and the others as the chr data type. "fread" reads numbers as the "int" data type, dates as the "POSIXct" data type, and the others as the "chr" data type.
+"read.csv" reads numbers as the "int" data type, the others as the "chr" data type. "read_csv" reads numbers as the "dbl" data type, dates as the "POSIXct" data type, and the others as the "chr" data type. "fread" reads numbers as the "int" data type, dates as the "POSIXct" data type, and the others as the "chr" data type.
 
 However, It should be noted that these results might be different depending on the computer environment.
 
@@ -130,8 +128,8 @@ The run time became faster. However, It should be noted that these results might
 
 ```{r}
 system.time(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
-  subject_id = col_double(),
-  hadm_id = col_double(),
+  subject_id = col_integer(),
+  hadm_id = col_integer(),
   admittime = col_datetime(format = ""),
   dischtime = col_datetime(format = ""),
   deathtime = col_datetime(format = ""),
@@ -151,14 +149,14 @@ system.time(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
 
 **Memory use:**
 
-The memory usage became smaller (55.31MB -\> 41.51MB).
+The memory usage became smaller (55.31MB -\> 38.06MB).
 
 However, It should be noted that these results might be different depending on the computer environment.
 
 ```{r}
 object_size(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
-  subject_id = col_double(),
-  hadm_id = col_double(),
+  subject_id = col_integer(),
+  hadm_id = col_integer(),
   admittime = col_datetime(format = ""),
   dischtime = col_datetime(format = ""),
   deathtime = col_datetime(format = ""),
@@ -217,7 +215,7 @@ Try to ingest only columns `subject_id`, `itemid`, `charttime`, and `valuenum` i
 
 **Answer:**
 
-This program solved the ingestion issue. Specifically, it took around 1.5 minutes.
+This program solved the ingestion issue. Specifically, it took around 2 minutes.
 
 ```{r}
 system.time(read_csv("~/mimic/hosp/labevents.csv.gz", col_select = c(
@@ -268,7 +266,7 @@ zcat < ./labevents_filtered.csv.gz | wc -l
 
 **Time**
 
-It takes around 13 seconds to ingest `labevents_filtered.csv.gz`. However, it should be noted that this result might be different depending on the computer environment.
+It takes around 3.5 seconds to ingest `labevents_filtered.csv.gz`. However, it should be noted that this result might be different depending on the computer environment.
 
 ```{r}
 system.time(read_csv("./labevents_filtered.csv.gz"))
@@ -331,9 +329,9 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
 
 **Display the first 10 lines**
 
-They matched those in Q2.3 other than "charttime". This is because in Q2.3, "charttime" is in UTC, but in Q2.4 "charttime" is in the local time, America/Los_Angeles. (According to the sessionInfo(), my timezone is "America/Los_Angeles"). 
+As for "charttime", I changed the timezone to the "UTC". This is because when I made the tibble, the original "charttime" in the file was considered as the UTC time and "charttime" is automatically changed to my local time.
 
-That is why, I changed the timezone to "US/Eastern" (authentic one) in Q2.4.
+As a result, the first 10 lines matched those in Q2.3.
 
 ```{r}
 open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |> 
@@ -348,7 +346,7 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
                        50931)) |> 
   as_tibble()  |>
   mutate(
-    charttime = with_tz(charttime, "US/Eastern")
+    charttime = with_tz(charttime, "UTC")
   ) |>
   arrange(subject_id) |>
   print(n=10)
@@ -370,13 +368,17 @@ Re-write the csv file `labevents.csv` in the binary Parquet format (Hint: [`arro
 
 **Re-write the csv file**
 
-The size of the Parquet file is 1.9GB.
+The size of the "./labevents.parquet/part-0.parquet" is around 1.9GB.
 
 ```{r}
 write_dataset(
   dataset = open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv"),
   path = "./labevents.parquet"
 )
+```
+
+```{r}
+file.size("./labevents.parquet/part-0.parquet") / 1024 / 1024 / 1024
 ```
 
 **Time**
@@ -417,9 +419,9 @@ open_dataset(sources = "./labevents.parquet", format = "parquet") |>
 
 **Display the first 10 lines**
 
-They matched those in Q2.3 other than "charttime". This is because, in Q2.3 "charttime" is in UTC, but in Q2.5 "charttime" is in the local time, America/Los_Angeles. (According to the sessionInfo(), my timezone is "America/Los_Angeles"). 
+As for "charttime", I changed the timezone to the "UTC". This is because when I made the tibble, the original "charttime" in the file was considered as the UTC time and "charttime" is automatically changed to my local time.
 
-That is why, I changed the timezone to "US/Eastern" (authentic one) in Q2.5.
+As a result, the first 10 lines matched those in Q2.3.
 
 ```{r}
 open_dataset(sources = "./labevents.parquet", format = "parquet") |> 
@@ -434,7 +436,7 @@ open_dataset(sources = "./labevents.parquet", format = "parquet") |>
                        50931)) |> 
   as_tibble()  |>
   mutate(
-    charttime = with_tz(charttime, "US/Eastern")
+    charttime = with_tz(charttime, "UTC")
   ) |>
   arrange(subject_id) |>
   print(n=10)
@@ -496,9 +498,9 @@ open_dataset(sources = "./labevents.parquet",
 
 **Display the first 10 lines**
 
-They matched those in Q2.3 other than "charttime". This is because, in Q2.3 "charttime" is in UTC, but in Q2.6 "charttime" is in the local time, America/Los_Angeles. (According to the sessionInfo(), my timezone is "America/Los_Angeles"). 
+As for "charttime", I changed the timezone to the "UTC". This is because when I made the tibble, the original "charttime" in the file was considered as the UTC time and "charttime" is automatically changed to my local time.
 
-That is why, I changed the timezone to "US/Eastern" (authentic one) in Q2.6.
+As a result, the first 10 lines matched those in Q2.3.
 
 ```{r}
 open_dataset(sources = "./labevents.parquet",
@@ -515,7 +517,7 @@ open_dataset(sources = "./labevents.parquet",
                        50931)) |>
   as_tibble() |>
   mutate(
-    charttime = with_tz(charttime, "US/Eastern")
+    charttime = with_tz(charttime, "UTC")
   ) |>
   arrange(subject_id) |>
   print(n=10)
@@ -547,7 +549,7 @@ Document the steps and show code. Display the number of rows and the first 10 ro
 
 **Answer**
 
-First, unzip `chartevents.csv.gz` and save it as \`chartevents.csv.
+First, unzip `chartevents.csv.gz` and save it as `chartevents.csv`.
 
 ```{bash}
 gzip -dk < ~/mimic/icu/chartevents.csv.gz > ~/mimic/icu/chartevents.csv
@@ -574,7 +576,7 @@ open_dataset(sources = "./chartevents.parquet", format = "parquet") |>
   nrow()
 ```
 
-Finally, ingest and filter `chartevents.parquet` to get the result tibble. Here, I extracted the first 10 rows of the result tibble (subject_id, itemid, charttime, valuenum). I specified the timezone of "charttime" to "US/Eastern" (authentic one).
+Finally, ingest select, and filter `chartevents.parquet` to get the result tibble. Here, I extracted the first 10 rows of the result tibble (subject_id, itemid, charttime, valuenum). 
 
 ```{r}
 open_dataset(sources = "./chartevents.parquet", format = "parquet") |> 
@@ -585,9 +587,6 @@ open_dataset(sources = "./chartevents.parquet", format = "parquet") |>
                        223761,
                        220210)) |> 
   as_tibble()  |>
-  mutate(
-    charttime = with_tz(charttime, "US/Eastern")
-  ) |>
   arrange(subject_id) |>
   print(n=10)
 ```
