@@ -139,12 +139,11 @@ system.time(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
   discharge_location = col_factor(),
   insurance = col_factor(),
   language = col_factor(),
-  marital_status =  col_factor(),
+  marital_status = col_factor(),
   race = col_factor(),
   edregtime = col_datetime(format = ""),
   edouttime = col_datetime(format = ""),
-  hospital_expire_flag = col_factor()
-)))
+  hospital_expire_flag = col_factor())))
 ```
 
 **Memory use:**
@@ -166,12 +165,11 @@ object_size(read_csv("~/mimic/hosp/admissions.csv.gz", col_types = cols(
   discharge_location = col_factor(),
   insurance = col_factor(),
   language = col_factor(),
-  marital_status =  col_factor(),
+  marital_status = col_factor(),
   race = col_factor(),
   edregtime = col_datetime(format = ""),
   edouttime = col_datetime(format = ""),
-  hospital_expire_flag = col_factor()
-)))
+  hospital_expire_flag = col_factor())))
 ```
 
 ## Q2. Ingest big data files
@@ -222,8 +220,7 @@ system.time(read_csv("~/mimic/hosp/labevents.csv.gz", col_select = c(
   subject_id,
   itemid,
   charttime,
-  valuenum
-)))
+  valuenum)))
 ```
 
 ### Q2.3 Ingest subset of `labevents.csv.gz`
@@ -296,8 +293,8 @@ Then use [`arrow::open_dataset`](https://arrow.apache.org/docs/r/reference/open_
 It takes less than one second. However, it should be noted that this result might be different depending on the computer environment.
 
 ```{r}
-system.time(open_dataset(sources = "~/mimic/hosp/labevents.csv",
-             format = "csv") |> 
+system.time(open_dataset(
+  sources = "~/mimic/hosp/labevents.csv", format = "csv") |> 
   select(subject_id, itemid, charttime, valuenum) |> 
   filter(itemid %in% c(50912,
                        50971,
@@ -323,7 +320,7 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
                        50882,
                        51221,
                        51301,
-                       50931)) |> 
+                       50931)) |>
   nrow()
 ```
 
@@ -344,12 +341,10 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
                        51221,
                        51301,
                        50931)) |> 
-  as_tibble()  |>
-  mutate(
-    charttime = with_tz(charttime, "UTC")
-  ) |>
+  as_tibble() |>
+  mutate(charttime = with_tz(charttime, "UTC")) |>
   arrange(subject_id) |>
-  print(n=10)
+  print(n = 10)
 ```
 
 Write a few sentences to explain what is Apache Arrow. Imagine you want to explain it to a layman in an elevator.
@@ -371,10 +366,9 @@ Re-write the csv file `labevents.csv` in the binary Parquet format (Hint: [`arro
 The size of the "./labevents.parquet/part-0.parquet" is around 1.9GB.
 
 ```{r}
-write_dataset(
-  dataset = open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv"),
-  path = "./labevents.parquet"
-)
+write_dataset(dataset = open_dataset(
+    sources = "~/mimic/hosp/labevents.csv", format = "csv"),
+    path = "./labevents.parquet")
 ```
 
 ```{r}
@@ -386,17 +380,16 @@ file.size("./labevents.parquet/part-0.parquet") / 1024 / 1024 / 1024
 It takes less than 1 second. However, it should be noted that this result might be different depending on the computer environment.
 
 ```{r}
-system.time(open_dataset(sources = "./labevents.parquet",
-                         format = "parquet") |> 
-  select(subject_id, itemid, charttime, valuenum) |> 
-  filter(itemid %in% c(50912,
-                       50971,
-                       50983,
-                       50902,
-                       50882,
-                       51221,
-                       51301,
-                       50931)))
+system.time(open_dataset(sources = "./labevents.parquet", format = "parquet") |>
+              select(subject_id, itemid, charttime, valuenum) |>
+              filter(itemid %in% c(50912,
+                                   50971,
+                                   50983,
+                                   50902,
+                                   50882,
+                                   51221,
+                                   51301,
+                                   50931)))
 ```
 
 **The number of rows**
@@ -404,8 +397,8 @@ system.time(open_dataset(sources = "./labevents.parquet",
 The number of rows is 24855909.
 
 ```{r}
-open_dataset(sources = "./labevents.parquet", format = "parquet") |> 
-  select(subject_id, itemid, charttime, valuenum) |> 
+open_dataset(sources = "./labevents.parquet", format = "parquet") |>
+  select(subject_id, itemid, charttime, valuenum) |>
   filter(itemid %in% c(50912,
                        50971,
                        50983,
@@ -434,12 +427,10 @@ open_dataset(sources = "./labevents.parquet", format = "parquet") |>
                        51221,
                        51301,
                        50931)) |> 
-  as_tibble()  |>
-  mutate(
-    charttime = with_tz(charttime, "UTC")
-  ) |>
+  as_tibble() |>
+  mutate(charttime = with_tz(charttime, "UTC")) |>
   arrange(subject_id) |>
-  print(n=10)
+  print(n = 10)
 ```
 
 Write a few sentences to explain what is the Parquet format. Imagine you want to explain it to a layman in an elevator.
@@ -461,18 +452,17 @@ Ingest the Parquet file, convert it to a DuckDB table by [`arrow::to_duckdb`](ht
 It takes less than 1 second to do ingest+convert+select+filter process. However, it should be noted that this result might be different depending on the computer environment.
 
 ```{r}
-system.time(open_dataset(sources = "./labevents.parquet",
-                         format = "parquet") |> 
-  to_duckdb() |>
-  select(subject_id, itemid, charttime, valuenum) |> 
-  filter(itemid %in% c(50912,
-                       50971,
-                       50983,
-                       50902,
-                       50882,
-                       51221,
-                       51301,
-                       50931)))
+system.time(open_dataset(sources = "./labevents.parquet", format = "parquet") |>
+              to_duckdb() |>
+              select(subject_id, itemid, charttime, valuenum) |>
+              filter(itemid %in% c(50912,
+                                   50971,
+                                   50983,
+                                   50902,
+                                   50882,
+                                   51221,
+                                   51301,
+                                   50931)))
 ```
 
 **The number of rows**
@@ -480,8 +470,7 @@ system.time(open_dataset(sources = "./labevents.parquet",
 The number of rows is 24855909.
 
 ```{r}
-open_dataset(sources = "./labevents.parquet",
-                         format = "parquet") |> 
+open_dataset(sources = "./labevents.parquet", format = "parquet") |>
   to_duckdb() |>
   select(subject_id, itemid, charttime, valuenum) |> 
   filter(itemid %in% c(50912,
@@ -503,8 +492,7 @@ As for "charttime", I changed the timezone to the "UTC". This is because when I 
 As a result, the first 10 lines matched those in Q2.3.
 
 ```{r}
-open_dataset(sources = "./labevents.parquet",
-                         format = "parquet") |> 
+open_dataset(sources = "./labevents.parquet", format = "parquet") |>
   to_duckdb() |>
   select(subject_id, itemid, charttime, valuenum) |> 
   filter(itemid %in% c(50912,
@@ -516,11 +504,9 @@ open_dataset(sources = "./labevents.parquet",
                        51301,
                        50931)) |>
   as_tibble() |>
-  mutate(
-    charttime = with_tz(charttime, "UTC")
-  ) |>
+  mutate(charttime = with_tz(charttime, "UTC")) |>
   arrange(subject_id) |>
-  print(n=10)
+  print(n = 10)
 ```
 
 Write a few sentences to explain what is DuckDB. Imagine you want to explain it to a layman in an elevator.
@@ -558,16 +544,15 @@ gzip -dk < ~/mimic/icu/chartevents.csv.gz > ~/mimic/icu/chartevents.csv
 Then, make the parquet file `chartevents.parquet` from `chartevents.csv`.
 
 ```{r}
-write_dataset(
-  dataset = open_dataset(sources = "~/mimic/icu/chartevents.csv", format = "csv"),
-  path = "./chartevents.parquet"
-)
+write_dataset(dataset = open_dataset(
+  sources = "~/mimic/icu/chartevents.csv", format = "csv"),
+  path = "./chartevents.parquet")
 ```
 
 The number of rows is 22502319.
 
 ```{r}
-open_dataset(sources = "./chartevents.parquet", format = "parquet") |> 
+open_dataset(sources = "./chartevents.parquet", format = "parquet") |>
   filter(itemid %in% c(220045,
                        220181,
                        220179,
@@ -579,16 +564,16 @@ open_dataset(sources = "./chartevents.parquet", format = "parquet") |>
 Finally, ingest select, and filter `chartevents.parquet` to get the result tibble. Here, I extracted the first 10 rows of the result tibble (subject_id, itemid, charttime, valuenum). 
 
 ```{r}
-open_dataset(sources = "./chartevents.parquet", format = "parquet") |> 
+open_dataset(sources = "./chartevents.parquet", format = "parquet") |>
   select(subject_id, itemid, charttime, valuenum) |> 
   filter(itemid %in% c(220045,
                        220181,
                        220179,
                        223761,
                        220210)) |> 
-  as_tibble()  |>
+  as_tibble() |>
   arrange(subject_id) |>
-  print(n=10)
+  print(n = 10)
 ```
 
 Delete the "chartevents.csv" file.
