@@ -331,7 +331,7 @@ As for "charttime", I changed the timezone to the "UTC". This is because when I 
 As a result, the first 10 lines matched those in Q2.3.
 
 ```{r}
-open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |> 
+open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
   select(subject_id, itemid, charttime, valuenum) |> 
   filter(itemid %in% c(50912,
                        50971,
@@ -340,7 +340,7 @@ open_dataset(sources = "~/mimic/hosp/labevents.csv", format = "csv") |>
                        50882,
                        51221,
                        51301,
-                       50931)) |> 
+                       50931)) |>
   as_tibble() |>
   mutate(charttime = with_tz(charttime, "UTC")) |>
   arrange(subject_id) |>
@@ -367,8 +367,8 @@ The size of the "./labevents.parquet/part-0.parquet" is around 1.9GB.
 
 ```{r}
 write_dataset(dataset = open_dataset(
-    sources = "~/mimic/hosp/labevents.csv", format = "csv"),
-    path = "./labevents.parquet")
+  sources = "~/mimic/hosp/labevents.csv", format = "csv"),
+  path = "./labevents.parquet")
 ```
 
 ```{r}
