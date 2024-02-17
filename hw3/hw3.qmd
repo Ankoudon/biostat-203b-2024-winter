@@ -1,7 +1,7 @@
 ---
 title: "Biostat 203B Homework 3"
 subtitle: "Due Feb 23 @ 11:59PM"
-author: "Your Name and UID"
+author: "Hiroyasu Ando, 605948443"
 format:
   html:
     theme: cosmo
@@ -197,6 +197,12 @@ ICU stays are a subset of ADT history. This figure shows the vitals of the patie
 
 **Answer**
 
+```{bash}
+#| eval: false
+cp -r ../hw2/chartevents.parquet ./chartevents_pq
+```
+
+
 ```{r}
 patient_id = 10013310
 ```
@@ -217,7 +223,7 @@ transfers <- read_csv("~/mimic/icu/d_items.csv.gz") |>
 ```
 
 ```{r, message=FALSE}
-labevents = open_dataset(sources = "../hw2/chartevents.parquet",
+labevents = open_dataset(sources = "./chartevents_pq",
                            format = "parquet") |>
   select(subject_id, itemid, charttime, value, storetime, hadm_id, valuenum) |>
   filter(subject_id %in% patient_id) |>
@@ -453,6 +459,38 @@ We are interested in the lab measurements of creatinine (50912), potassium (5097
 
 ![](labevents_tble.png)
 
+**Answer**
+
+```{r, message=FALSE, warning = FALSE}
+labevents_q5 = open_dataset(sources = "./labevents_pq", format = "parquet") |>
+  select(subject_id, itemid, charttime, valuenum, storetime) |>
+  filter(itemid == 50912 | itemid == 50971 | itemid == 50983 |
+           itemid == 50902 | itemid == 50882 | itemid == 51221 |
+           itemid == 51301 | itemid == 50931) |>
+  as_tibble() |>
+  left_join(icustays_tble, by = "subject_id") 
+```
+```{r, message=FALSE, warning = FALSE}
+labevents_q5_2 = labevents_q5 |>
+  select(subject_id, itemid, valuenum, storetime, stay_id, intime) |>
+  arrange(subject_id, itemid, storetime) |>
+  filter(storetime < intime) |>
+  group_by(subject_id, stay_id, itemid) |>
+  slice_tail(n = 1) |>
+  select(subject_id, itemid, valuenum, stay_id)
+```
+
+```{r, message=FALSE}
+labevents_q5_3 = labevents_q5_2 |>
+  pivot_wider(names_from = itemid, values_from = valuenum) |>
+  arrange(subject_id) |>
+  ungroup() |>
+  rename(creatinine = "50912", potassium = "50971", sodium = "50983",
+         chloride = "50902", bicarbonate = "50882", hematocrit = "51221",
+         wbc = "51301", glucose = "50931") |>
+  print(width = Inf)
+```
+
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `labevents_pq` folder available at the current working directory `hw3`, for example, by a symbolic link.
 
 ## Q6. Vitals from charted events
@@ -472,6 +510,39 @@ zcat < ~/mimic/icu/d_items.csv.gz | head
 We are interested in the vitals for ICU patients: heart rate (220045), systolic non-invasive blood pressure (220179), diastolic non-invasive blood pressure (220180), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items for the patients in `icustays_tble`. Further restrict to the first vital measurement within the ICU stay. The final `chartevents_tble` should have one row per ICU stay and columns for each vital measurement.
 
 ![](chartevents_tble.png)
+
+**Answer**
+
+```{r, message=FALSE, warning = FALSE}
+chartevents_q6 = open_dataset(sources = "./chartevents_pq",
+                              format = "parquet") |>
+  select(subject_id, itemid, valuenum, storetime) |>
+  filter(itemid == 220045 | itemid == 220179 | itemid == 220180 |
+           itemid == 223761 | itemid == 220210) |>
+  as_tibble() |>
+  left_join(icustays_tble, by = "subject_id") 
+```
+
+```{r, message=FALSE, warning = FALSE}
+chartevents_q6_2 = chartevents_q6 |>
+  select(subject_id, itemid, valuenum, storetime, stay_id, intime) |>
+  arrange(subject_id, itemid, storetime) |>
+  filter(storetime > intime) |>
+  group_by(subject_id, stay_id, itemid) |>
+  slice_head(n = 1) |>
+  select(subject_id, itemid, valuenum, stay_id)
+```
+
+```{r}
+chartevents_q6_3 = chartevents_q6_2 |>
+  pivot_wider(names_from = itemid, values_from = valuenum) |>
+  arrange(subject_id) |>
+  ungroup() |>
+  rename(heart_rate = "220045", non_invasive_blood_pressure_systolic = "220179",
+         non_invasive_blood_pressure_diastolic= "220180",
+         temperature_fahrenheit = "223761", respiratory_rate = "220210") |>
+  print(width = Inf)
+```
 
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `chartevents_pq` folder available at the current working directory, for example, by a symbolic link.
 
