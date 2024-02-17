@@ -314,6 +314,11 @@ zcat < ~/mimic/hosp/admissions.csv.gz | head
 
 Import `admissions.csv.gz` as a tibble `admissions_tble`.
 
+```{r, message=FALSE}
+admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
+  as_tibble()
+```
+
 ### Q3.2 Summary and visualization
 
 Summarize the following information by graphics and explain any patterns you see.
@@ -323,6 +328,72 @@ Summarize the following information by graphics and explain any patterns you see
 -   admission minute (anything unusual?)\
 -   length of hospital stay (from admission to discharge) (anything unusual?)
 
+**Number of admissions per patient**
+
+As the number of admissions per patient increases, the number of patients decreases. 
+
+```{r}
+admissions_tble |>
+  group_by(subject_id) |>
+  summarize(n = n()) |>
+  ggplot(aes(x = n)) +
+  geom_bar() +
+  labs(title = "Number of admissions per patient",
+       x = "Number of admissions",
+       y = "Number of patients")
+```
+
+**Admission hour (anything unusual?)**
+
+The number of admissions is highest at 00:00 and decreases until 06:00. However, it increases sharply again at 07:00, and then declines at 08:00. Thereafter, it gradually increases until 12:00.
+
+```{r}
+admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
+  as_tibble() |>
+  mutate(admittime = with_tz(admittime, "UTC")) |>
+  mutate(admithour = format(admittime, "%H"))
+
+admissions_tble |>
+  ggplot(aes(x = admithour)) +
+  geom_bar() +
+  labs(title = "Admission hour",
+       x = "Admission Hour",
+       y = "Admission Count")
+
+```
+
+**Admission minute (anything unusual?)**
+
+There is a peak at 00 minute, and then peak happens every 15 minutes. These peaks are getting smaller as the minute increases.
+
+```{r}
+admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
+  as_tibble() |>
+  mutate(admitminute = format(admittime, "%M"))
+
+admissions_tble |>
+  ggplot(aes(x = admitminute)) +
+  geom_bar() +
+  labs(title = "Admission minute",
+       x = "Admission minute",
+       y = "Admission Count") +
+  scale_x_discrete(breaks=seq(0, 60, by=5))
+```
+**length of hospital stay (from admission to discharge) (anything unusual?)**
+
+As the length of hospital stay increases, the number of patients decreases. The most common length of hospital stay is a few days.
+
+```{r}
+admissions_tble <- admissions_tble |>
+  mutate(hos_stay = as.numeric(difftime(dischtime, admittime, units = "days")))
+
+admissions_tble |>
+  ggplot(aes(x = hos_stay)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Length of hospital stay (days)",
+       x = "Length of hospital stay (days)",
+       y = "Count") 
+```
 According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/concepts/#date-shifting),
 
 > All dates in the database have been shifted to protect patient confidentiality. Dates will be internally consistent for the same patient, but randomly distributed in the future. Dates of birth which occur in the present time are not true dates of birth. Furthermore, dates of birth which occur before the year 1900 occur if the patient is older than 89. In these cases, the patient’s age at their first admission has been fixed to 300.
