@@ -389,7 +389,7 @@ admissions_tble <- admissions_tble |>
 
 admissions_tble |>
   ggplot(aes(x = hos_stay)) +
-  geom_histogram(binwidth = 1) +
+  geom_bar() +
   labs(title = "Length of hospital stay (days)",
        x = "Length of hospital stay (days)",
        y = "Count") 
@@ -410,9 +410,30 @@ zcat < ~/mimic/hosp/patients.csv.gz | head
 
 Import `patients.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/patients/>) as a tibble `patients_tble`.
 
+**Answer**
+
+```{r, message=FALSE}
+patients_tble <- read_csv("~/mimic/hosp/patients.csv.gz") |>
+  as_tibble()
+```
+
 ### Q4.2 Summary and visualization
 
 Summarize variables `gender` and `anchor_age` by graphics, and explain any patterns you see.
+
+**Answer**
+
+Men and women have the similar patterns. The number of patients in their early 20s, both male and female, is high. Also, the number of female patients is higher than the number of male patients.
+
+```{r}
+patients_tble |>
+  ggplot(aes(x = anchor_age, color = gender)) +
+  geom_bar() +
+  labs(title = "Age distribution by gender",
+       x = "Age",
+       y = "Count")
+```
+
 
 ## Q5. Lab results
 
