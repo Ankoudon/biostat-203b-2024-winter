@@ -353,30 +353,34 @@ admissions_tble |>
 
 The number of admissions is highest at 00:00 and decreases until 06:00. However, it increases sharply again at 07:00, and then declines at 08:00. Thereafter, it gradually increases until 12:00.
 
-```{r}
+```{r, message=FALSE}
 admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
   as_tibble() |>
   mutate(admittime = with_tz(admittime, "UTC")) |>
   mutate(admithour = format(admittime, "%H"))
+```
 
+```{r}
 admissions_tble |>
   ggplot(aes(x = admithour)) +
   geom_bar() +
   labs(title = "Admission hour",
        x = "Admission Hour",
        y = "Admission Count")
-
 ```
 
 **Admission minute (anything unusual?)**
 
 There is a peak at 00 minute, and then peak happens every 15 minutes. These peaks are getting smaller as the minute increases.
 
-```{r}
+```{r, message=FALSE}
 admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
   as_tibble() |>
   mutate(admitminute = format(admittime, "%M"))
 
+```
+
+```{r}
 admissions_tble |>
   ggplot(aes(x = admitminute)) +
   geom_bar() +
@@ -389,10 +393,12 @@ admissions_tble |>
 
 As the length of hospital stay increases, the number of patients decreases. The most common length of hospital stay is a few days.
 
-```{r}
+```{r, message=FALSE}
 admissions_tble <- admissions_tble |>
   mutate(hos_stay = as.numeric(difftime(dischtime, admittime, units = "days")))
+```
 
+```{r}
 admissions_tble |>
   ggplot(aes(x = hos_stay)) +
   geom_bar() +
@@ -468,22 +474,35 @@ labevents_q5 = open_dataset(sources = "./labevents_pq", format = "parquet") |>
            itemid == 50902 | itemid == 50882 | itemid == 51221 |
            itemid == 51301 | itemid == 50931) |>
   as_tibble() |>
-  left_join(icustays_tble, by = "subject_id") 
+  inner_join(icustays_tble, by = "subject_id") |>
+  distinct() 
 ```
+
 ```{r, message=FALSE, warning = FALSE}
+#labevents_q5_2 = labevents_q5 |>
+  #select(subject_id, itemid, valuenum, storetime, stay_id, intime, charttime) |>
+  #filter(storetime < intime) |>
+  #arrange(subject_id, stay_id, itemid, storetime, charttime, valuenum) |>
+  #group_by(subject_id, stay_id, itemid) |>
+  #slice_tail(n = 1) |>
+  #select(subject_id, itemid, valuenum, stay_id)
+```
+
+```{r}
 labevents_q5_2 = labevents_q5 |>
-  select(subject_id, itemid, valuenum, storetime, stay_id, intime) |>
-  arrange(subject_id, itemid, storetime) |>
+  select(subject_id, itemid, valuenum, storetime, stay_id, intime, charttime) |>
   filter(storetime < intime) |>
   group_by(subject_id, stay_id, itemid) |>
-  slice_tail(n = 1) |>
+  slice_max(order_by = storetime) |>
+  slice_max(order_by = charttime) |>
+  slice_max(order_by = valuenum) |>
   select(subject_id, itemid, valuenum, stay_id)
 ```
 
 ```{r, message=FALSE}
 labevents_q5_3 = labevents_q5_2 |>
   pivot_wider(names_from = itemid, values_from = valuenum) |>
-  arrange(subject_id) |>
+  arrange(subject_id, stay_id) |>
   ungroup() |>
   rename(creatinine = "50912", potassium = "50971", sodium = "50983",
          chloride = "50902", bicarbonate = "50882", hematocrit = "51221",
@@ -516,27 +535,31 @@ We are interested in the vitals for ICU patients: heart rate (220045), systolic 
 ```{r, message=FALSE, warning = FALSE}
 chartevents_q6 = open_dataset(sources = "./chartevents_pq",
                               format = "parquet") |>
-  select(subject_id, itemid, valuenum, storetime) |>
+  select(subject_id, itemid, valuenum, storetime, charttime) |>
   filter(itemid == 220045 | itemid == 220179 | itemid == 220180 |
            itemid == 223761 | itemid == 220210) |>
   as_tibble() |>
-  left_join(icustays_tble, by = "subject_id") 
+  inner_join(icustays_tble, by = "subject_id") |>
+  distinct() 
 ```
 
-```{r, message=FALSE, warning = FALSE}
+```{r}
 chartevents_q6_2 = chartevents_q6 |>
-  select(subject_id, itemid, valuenum, storetime, stay_id, intime) |>
-  arrange(subject_id, itemid, storetime) |>
-  filter(storetime > intime) |>
+  select(subject_id, itemid, valuenum, storetime, stay_id, intime, charttime, outtime) |>
+  filter(charttime >= intime) |>
+  filter(charttime <= outtime) |>
+  arrange(subject_id, stay_id, itemid) |>
   group_by(subject_id, stay_id, itemid) |>
-  slice_head(n = 1) |>
+  slice_min(order_by = charttime) |>
   select(subject_id, itemid, valuenum, stay_id)
+
+chartevents_q6_2
 ```
 
 ```{r}
 chartevents_q6_3 = chartevents_q6_2 |>
   pivot_wider(names_from = itemid, values_from = valuenum) |>
-  arrange(subject_id) |>
+  arrange(subject_id, stay_id) |>
   ungroup() |>
   rename(heart_rate = "220045", non_invasive_blood_pressure_systolic = "220179",
          non_invasive_blood_pressure_diastolic= "220180",
@@ -560,14 +583,229 @@ The final `mimic_icu_cohort` should have one row per ICU stay and columns for ea
 
 ![](mimic_icu_cohort.png)
 
+```{r}
+mimic_icu_cohort = icustays_tble |>
+  left_join(admissions_tble, by = c("subject_id", "hadm_id")) |>
+  left_join(patients_tble, by = "subject_id") |>
+  left_join(labevents_q5_3, by = c("subject_id", "stay_id")) |>
+  left_join(chartevents_q6_3, by = c("subject_id", "stay_id")) |>
+  filter(anchor_age >= 18) |>
+  mutate(age_at_intime = anchor_age + round(
+    as.numeric(difftime(intime, admittime))/(365 * 24 * 60 * 60))) |>
+  print(width = Inf)
+```
 ## Q8. Exploratory data analysis (EDA)
 
 Summarize the following information about the ICU stay cohort `mimic_icu_cohort` using appropriate numerics or graphs:
 
 -   Length of ICU stay `los` vs demographic variables (race, insurance, marital_status, gender, age at intime)
 
+**los vs race**
+
+```{r}
+race_los <- mimic_icu_cohort |>
+  mutate(race_type = if_else(
+    str_detect(race, "ASIAN"), "ASIAN", if_else(
+      str_detect(race, "WHITE"), "WHITE", if_else(
+        str_detect(race, "BLACK"), "BLACK", if_else(
+          str_detect(race, "HISPANIC"), "HISPANIC", "OTHER"))))) 
+
+gg_race_los <- race_los |>
+  ggplot(aes(x = race_type, y = los)) +
+  geom_boxplot() +
+  labs(title = "Length of ICU stay by race",
+       x = "race",
+       y = "Length of ICU stay")
+
+gg_race_los
+```
+
+```{r}
+race_los <- mimic_icu_cohort |>
+  group_by(race) |>
+  summarise(
+    n = n(),
+    mean_los = mean(los),
+    median_los = median(los),
+    max_los = max(los),
+    min_los = min(los),
+    sd_los = sd(los),
+    iqr_los = IQR(los))
+race_los
+```
+
+**los vs insurance**
+
+```{r}
+insurance_los <- mimic_icu_cohort |>
+  ggplot(aes(x = insurance, y = los)) +
+  geom_boxplot() +
+  labs(title = "Length of ICU stay by insurance",
+       x = "Insurance",
+       y = "Length of ICU stay")
+
+insurance_los
+```
+
+```{r}
+insurance_los <- mimic_icu_cohort |>
+  group_by(insurance) |>
+  summarise(
+    n = n(),
+    mean_los = mean(los),
+    median_los = median(los),
+    max_los = max(los),
+    min_los = min(los),
+    sd_los = sd(los),
+    iqr_los = IQR(los))
+
+insurance_los
+```
+
+**los vs marital status**
+
+```{r}
+marital_status_los <- mimic_icu_cohort |>
+  ggplot(aes(x = marital_status, y = los)) +
+  geom_point() +
+  labs(title = "Length of ICU stay by marital status",
+       x = "Marital status",
+       y = "Length of ICU stay")
+
+marital_status_los
+```
+
+```{r}
+marital_status_los <- mimic_icu_cohort |>
+  group_by(marital_status) |>
+  summarise(
+    n = n(),
+    mean_los = mean(los),
+    median_los = median(los),
+    max_los = max(los),
+    min_los = min(los),
+    sd_los = sd(los),
+    iqr_los = IQR(los))
+
+marital_status_los
+```
+
+**los vs gender**
+
+```{r}
+gender_los <- mimic_icu_cohort |>
+  ggplot(aes(x = los, color = gender)) +
+  geom_bar() +
+  labs(title = "Length of ICU stay by gender",
+       x = "Length of ICU stay",
+       y = "Count")
+
+gender_los
+```
+
+```{r}
+gender_los <- mimic_icu_cohort |>
+  group_by(gender) |>
+  summarise(
+    n = n(),
+    mean_los = mean(los),
+    median_los = median(los),
+    max_los = max(los),
+    min_los = min(los),
+    sd_los = sd(los),
+    iqr_los = IQR(los))
+
+gender_los
+```
+
+**los vs age at intime**
+
+```{r}
+age_at_intime_los <- mimic_icu_cohort |>
+  ggplot(aes(x = age_at_intime, y = los)) +
+  geom_point() +
+  labs(title = "Length of ICU stay vs age at intime",
+       x = "Age at intime",
+       y = "Length of ICU stay")
+
+age_at_intime_los
+```
+
+```{r}
+age_at_intime_los <- mimic_icu_cohort |>
+  group_by(age_at_intime) |>
+  summarise(
+    n = n(),
+    mean_los = mean(los),
+    median_los = median(los),
+    max_los = max(los),
+    min_los = min(los),
+    sd_los = sd(los),
+    iqr_los = IQR(los))
+
+age_at_intime_los
+```
+
 -   Length of ICU stay `los` vs the last available lab measurements before ICU stay
+
+```{r}
+lab_los <- mimic_icu_cohort |>
+  select(los, creatinine, potassium, sodium, chloride, bicarbonate, hematocrit, wbc, glucose) |>
+  pivot_longer(cols = -los, names_to = "lab", values_to = "value") |>
+  ggplot(aes(x = value, y = los)) +
+  geom_point() +
+  facet_wrap(~lab, scales = "free") +
+  labs(title = "Length of ICU stay vs the last available lab measurements before ICU stay",
+       x = "Lab value",
+       y = "Length of ICU stay")
+
+lab_los
+```
 
 -   Length of ICU stay `los` vs the average vital measurements within the first hour of ICU stay
 
+```{r}
+vital_los <- mimic_icu_cohort |>
+  select(los, heart_rate, non_invasive_blood_pressure_systolic,
+         non_invasive_blood_pressure_diastolic, temperature_fahrenheit,
+         respiratory_rate) |>
+  pivot_longer(cols = -los, names_to = "vital", values_to = "value") |>
+  group_by(vital) |>
+  summarise(
+    mean_value = mean(value, na.rm = TRUE),
+    median_value = median(value, na.rm = TRUE),
+    max_value = max(value, na.rm = TRUE),
+    min_value = min(value, na.rm = TRUE),
+    sd_value = sd(value, na.rm = TRUE),
+    iqr_value = IQR(value, na.rm = TRUE)) 
+
+vital_los
+```
+
 -   Length of ICU stay `los` vs first ICU unit
+
+```{r}
+unit_los <- mimic_icu_cohort |>
+  group_by(first_careunit) |>
+  summarise(
+    n = n(),
+    mean_los = mean(los),
+    median_los = median(los),
+    max_los = max(los),
+    min_los = min(los),
+    sd_los = sd(los),
+    iqr_los = IQR(los))
+
+unit_los
+```
+
+```{r}
+unit_los <- mimic_icu_cohort |>
+  ggplot(aes(x = los, y = first_careunit)) +
+  geom_boxplot() +
+  labs(title = "Length of ICU stay vs first ICU unit",
+       x = "Length of ICU stay",
+       y = "First ICU unit")
+
+unit_los
+```
