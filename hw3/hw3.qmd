@@ -1,7 +1,7 @@
 ---
 title: "Biostat 203B Homework 3"
 subtitle: "Due Feb 23 @ 11:59PM"
-author: "Hiroyasu Ando, 605948443"
+author: "Hiroyasu Ando, UID: 605948443"
 format:
   html:
     theme: cosmo
@@ -53,7 +53,7 @@ Hint: We need to pull information from data files `patients.csv.gz`, `admissions
 
 **Answer**
 
-Put "labevents.parquet" in the current working directory `hw3` as "labevents_pq".
+Put "labevents.parquet" in the current working directory, `hw3`, as "labevents_pq".
 
 ```{bash}
 #| eval: false
@@ -87,15 +87,15 @@ patient_race <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
   tolower()
 ```
 
-Retrieve the patient's top 3 diagnoses.
+Retrieve the patient's top 3 diagnoses. I used 'hadn_id', 21243435.
 
 ```{r, message=FALSE}
 patient_diagnoses <- read_csv("~/mimic/hosp/diagnoses_icd.csv.gz") |>
-  left_join(read_csv("~/mimic/hosp/d_icd_diagnoses.csv.gz"), by = c("icd_code", "icd_version")) |>
+  left_join(read_csv("~/mimic/hosp/d_icd_diagnoses.csv.gz"),
+            by = c("icd_code", "icd_version")) |>
   filter(subject_id %in% patient_id) |>
   arrange(hadm_id, seq_num) |>
   select(long_title) |>
-  distinct() |>
   slice_head(n = 3)
 
 diagnose_1 <- tolower(patient_diagnoses$long_title[1])
@@ -109,10 +109,11 @@ Make the ADT history data.
 transfers <- read_csv("~/mimic/hosp/transfers.csv.gz") |>
   filter(subject_id %in% patient_id) |>
   select(careunit, intime, outtime) |>
+  # Fix the timezone issue
   mutate(intime = with_tz(intime, "UTC"),
          outtime = with_tz(outtime, "UTC"))
 
-# Get the number of careunit
+# Get the number of the distinct careunit
 careunit_num <- transfers |>
   select(careunit) |>
   distinct() |>
@@ -121,8 +122,10 @@ careunit_num <- transfers |>
 adt <- transfers |>
   mutate(y_type = "ADT",
          line_size = if_else(
+           # Detect if the careunit is ICU or CCU
            str_detect(careunit, "CCU") | str_detect(careunit, "ICU"),
            8, 3)) |>
+  # Fix the length of careunit less than 35
   mutate(careunit = str_sub(careunit, 1, 35)) |>
   na.omit() |>
   arrange(intime) 
@@ -136,6 +139,7 @@ labevents = open_dataset(sources = "./labevents_pq", format = "parquet") |>
   select(charttime) |>
   as_tibble() |>
   mutate(y_type = "Lab") |>
+  # Fix the timezone issue
   mutate(charttime = with_tz(charttime, "UTC")) |>
   arrange(charttime)
 ```
@@ -148,11 +152,14 @@ procedures <- read_csv("~/mimic/hosp/procedures_icd.csv.gz") |>
   left_join(read_csv("~/mimic/hosp/d_icd_procedures.csv.gz"),
             by = c("icd_code", "icd_version")) |>
   mutate(y_type = "Procedure",
+         # Fix the timezone issue
          chartdate = with_tz(chartdate, "UTC")) |>
+  # Fix the date format
   mutate(chartdate = as.POSIXct(chartdate, format = "%Y-%m-%d %H:%M:%S")) |>
+  # Fix the length of long_title less than 25
   mutate(long_title = str_sub(long_title, 1, 25))
 
-# Get the number of careunit
+# Get the number of the distinctive procedures
 long_title_num <- procedures |>
   select(long_title) |>
   distinct() |>
@@ -170,7 +177,7 @@ ggplot() +
                    color = careunit), linewidth = adt$line_size) +
   geom_point(data = procedures, aes(x = chartdate,
                                     y = y_type,
-                                    shape = long_title), size = 3) + 
+                                    shape = long_title), size = 3) +
   scale_shape_manual(values = seq(1, long_title_num)) +
   theme_bw() + 
   theme(legend.position = "bottom", legend.box = "vertical",
@@ -181,9 +188,9 @@ ggplot() +
   labs(title = paste0("Patient ",
                       patient_id, ", ",
                       patient_gender, ", ",
-                      patient_age, ", ",
+                      patient_age, " ",
                       "years old, ", patient_race),
-       x = "Calendar time",
+       x = "Calendar Time",
        subtitle = paste0(diagnose_1, "\n", diagnose_2, "\n", diagnose_3)) +
   scale_y_discrete(limits = c("Procedure", "Lab", "ADT"))
       
@@ -197,15 +204,20 @@ ICU stays are a subset of ADT history. This figure shows the vitals of the patie
 
 **Answer**
 
+Put "chartevents.parquet" in the current working directory, `hw3`, as "chartevents_pq".
+
 ```{bash}
 #| eval: false
 cp -r ../hw2/chartevents.parquet ./chartevents_pq
 ```
 
+Specify the `subject_id`.
 
 ```{r}
 patient_id = 10013310
 ```
+
+Retrieve the ICU stays of the patient.
 
 ```{r, message=FALSE}
 icustays <- read_csv("~/mimic/icu/icustays.csv.gz") |>
@@ -214,26 +226,33 @@ icustays <- read_csv("~/mimic/icu/icustays.csv.gz") |>
   distinct()
 ```
 
+Find the itemid of the vitals.
+
 ```{r, message=FALSE}
 transfers <- read_csv("~/mimic/icu/d_items.csv.gz") |>
   filter(abbreviation == "NBPd" | abbreviation == "NBPs" |
            abbreviation == "HR" | abbreviation == "Temperature F" |
-           abbreviation == "RR")  |>
-  select(itemid, abbreviation) 
+           abbreviation == "RR") |>
+  select(itemid, abbreviation) |>
+  print(width = Inf)
 ```
+Make the labevents data with all necessary information.
 
 ```{r, message=FALSE}
 labevents = open_dataset(sources = "./chartevents_pq",
-                           format = "parquet") |>
+                         format = "parquet") |>
   select(subject_id, itemid, charttime, value, storetime, hadm_id, valuenum) |>
   filter(subject_id %in% patient_id) |>
   filter(itemid %in% c(220045, 220179, 220180, 223761, 220210)) |>
-  as_tibble() |>
+  collect() |>
   left_join(icustays, by = c("hadm_id" = "hadm_id")) |>
   left_join(transfers, by = c("itemid" = "itemid")) |>
+  # Fix the timezone issue
   mutate(charttime = with_tz(charttime, "UTC")) |>
   arrange(stay_id, charttime)
 ```
+
+Make the plot.
 
 ```{r}
 ggplot() +
@@ -242,13 +261,13 @@ ggplot() +
   geom_point(data = labevents, mapping = aes(x = charttime,
                                              y = valuenum,
                                              color = as.factor(abbreviation)),
-             size = 1) + 
-  facet_grid(abbreviation ~ stay_id,  scales = "free") +
+             size = 1) +
+  facet_grid(abbreviation ~ stay_id, scales = "free") +
   theme_light() +
   guides(color = "none",
-         x = guide_axis(n.dodge = 2)) + 
+         x = guide_axis(n.dodge = 2)) +
   theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
-  scale_x_datetime(labels = scales::date_format("%Y-%m-%d %H:%M")) + 
+  scale_x_datetime(labels = scales::date_format("%b %d %H:%M")) + 
   labs(title = paste0("Patient ", patient_id, " ICU stays - Vitals"))
 ```
 
