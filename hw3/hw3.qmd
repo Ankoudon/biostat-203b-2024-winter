@@ -57,7 +57,7 @@ Put "labevents.parquet" in the current working directory, `hw3`, as "labevents_p
 
 ```{bash}
 #| eval: false
-cp -r ../hw2/labevents.parquet ./labevents_pq
+ln -s ../hw2/labevents.parquet ./labevents_pq
 ```
 
 Specify the `subject_id`.
@@ -208,7 +208,7 @@ Put "chartevents.parquet" in the current working directory, `hw3`, as "charteven
 
 ```{bash}
 #| eval: false
-cp -r ../hw2/chartevents.parquet ./chartevents_pq
+ln -s ../hw2/chartevents.parquet ./chartevents_pq
 ```
 
 Specify the `subject_id`.
@@ -283,6 +283,8 @@ zcat < ~/mimic/icu/icustays.csv.gz | head
 
 ### Q2.1 Ingestion
 
+**Answer**
+
 Import `icustays.csv.gz` as a tibble `icustays_tble`.
 
 ```{r, message=FALSE}
@@ -322,9 +324,9 @@ icustays_tble |>
   summarize(n = n()) |>
   ggplot(aes(x = n)) +
   geom_bar() +
-  labs(title = "Number of ICU stays per subject_id",
+  labs(title = "Number of ICU stays per patient",
        x = "Number of ICU stays",
-       y = "Number of subject_id")
+       y = "Number of patients")
 ```
 
 ## Q3. `admissions` data
@@ -408,6 +410,7 @@ admissions_tble |>
        y = "Admission Count") +
   scale_x_discrete(breaks=seq(0, 60, by=5))
 ```
+
 **length of hospital stay (from admission to discharge) (anything unusual?)**
 
 As the length of hospital stay increases, the number of patients decreases. The most common length of hospital stay is a few days.
@@ -483,53 +486,72 @@ zcat < ~/mimic/hosp/d_labitems.csv.gz | head
 We are interested in the lab measurements of creatinine (50912), potassium (50971), sodium (50983), chloride (50902), bicarbonate (50882), hematocrit (51221), white blood cell count (51301), and glucose (50931). Retrieve a subset of `labevents.csv.gz` that only containing these items for the patients in `icustays_tble`. Further restrict to the last available measurement (by `storetime`) before the ICU stay. The final `labevents_tble` should have one row per ICU stay and columns for each lab measurement.
 
 ![](labevents_tble.png)
+Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `labevents_pq` folder available at the current working directory `hw3`, for example, by a symbolic link.
 
-**Answer**
-
-```{r, message=FALSE, warning = FALSE}
-labevents_q5 = open_dataset(sources = "./labevents_pq", format = "parquet") |>
-  select(subject_id, itemid, charttime, valuenum, storetime) |>
-  filter(itemid == 50912 | itemid == 50971 | itemid == 50983 |
-           itemid == 50902 | itemid == 50882 | itemid == 51221 |
-           itemid == 51301 | itemid == 50931) |>
-  as_tibble() |>
-  inner_join(icustays_tble, by = "subject_id") |>
-  distinct() 
-```
-
-```{r, message=FALSE, warning = FALSE}
-#labevents_q5_2 = labevents_q5 |>
-  #select(subject_id, itemid, valuenum, storetime, stay_id, intime, charttime) |>
-  #filter(storetime < intime) |>
-  #arrange(subject_id, stay_id, itemid, storetime, charttime, valuenum) |>
-  #group_by(subject_id, stay_id, itemid) |>
-  #slice_tail(n = 1) |>
-  #select(subject_id, itemid, valuenum, stay_id)
-```
+**Retrieve a subset of `labevents.csv.gz`**
 
 ```{r}
-labevents_q5_2 = labevents_q5 |>
+
+# Get the list of the patients in icustays_tble
+patients_id_list <- icustays_tble |>
+  select(subject_id) |>
+  distinct() |>
+  pull()
+
+# Get the list of the required items in d_labitems.csv.gz
+items_id_list <- read_csv("~/mimic/hosp/d_labitems.csv.gz") |>
+  filter(itemid %in% c(50912,
+                       50971,
+                       50983,
+                       50902,
+                       50882, 
+                       51221,
+                       51301,
+                       50931))
+
+# Get a subset of `labevents.csv.gz`
+labevents_sub <- open_dataset(sources = "./labevents_pq", format = "parquet") |>
+  select(subject_id, itemid, charttime, valuenum, storetime) |>
+  filter(itemid %in% items_id_list$itemid) |>
+  filter(subject_id %in% patients_id_list) |>
+  collect() |>
+  distinct()
+
+labevents_sub
+```
+
+**The final `labevents_tble`**
+
+Restrict to the last available measurement (by `storetime`) before the ICU stay. 
+
+```{r, message=FALSE, warning = FALSE}
+labevents_sub2 = labevents_sub |>
+  left_join(icustays_tble, by = "subject_id") |>
   select(subject_id, itemid, valuenum, storetime, stay_id, intime, charttime) |>
   filter(storetime < intime) |>
   group_by(subject_id, stay_id, itemid) |>
+  # Get the latest storetime
   slice_max(order_by = storetime) |>
+  # Get the latest charttime
   slice_max(order_by = charttime) |>
+  # Get the maxmum value of valuenum
   slice_max(order_by = valuenum) |>
   select(subject_id, itemid, valuenum, stay_id)
 ```
 
+Make the final data.
+
 ```{r, message=FALSE}
-labevents_q5_3 = labevents_q5_2 |>
+labevents_tble = labevents_sub2 |>
   pivot_wider(names_from = itemid, values_from = valuenum) |>
   arrange(subject_id, stay_id) |>
   ungroup() |>
-  rename(creatinine = "50912", potassium = "50971", sodium = "50983",
-         chloride = "50902", bicarbonate = "50882", hematocrit = "51221",
-         wbc = "51301", glucose = "50931") |>
+  rename(setNames(as.character(items_id_list$itemid),
+                  tolower(items_id_list$label))) |>
+  # Change the column name, "white blood cells" to "wbc" manually
+  rename("wbc" = "white blood cells") |>
   print(width = Inf)
 ```
-
-Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `labevents_pq` folder available at the current working directory `hw3`, for example, by a symbolic link.
 
 ## Q6. Vitals from charted events
 
@@ -548,45 +570,65 @@ zcat < ~/mimic/icu/d_items.csv.gz | head
 We are interested in the vitals for ICU patients: heart rate (220045), systolic non-invasive blood pressure (220179), diastolic non-invasive blood pressure (220180), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items for the patients in `icustays_tble`. Further restrict to the first vital measurement within the ICU stay. The final `chartevents_tble` should have one row per ICU stay and columns for each vital measurement.
 
 ![](chartevents_tble.png)
+Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `chartevents_pq` folder available at the current working directory, for example, by a symbolic link.
 
-**Answer**
-
-```{r, message=FALSE, warning = FALSE}
-chartevents_q6 = open_dataset(sources = "./chartevents_pq",
-                              format = "parquet") |>
-  select(subject_id, itemid, valuenum, storetime, charttime) |>
-  filter(itemid == 220045 | itemid == 220179 | itemid == 220180 |
-           itemid == 223761 | itemid == 220210) |>
-  as_tibble() |>
-  inner_join(icustays_tble, by = "subject_id") |>
-  distinct() 
-```
+**Retrieve a subset of `chartevents.csv.gz`**
 
 ```{r}
-chartevents_q6_2 = chartevents_q6 |>
-  select(subject_id, itemid, valuenum, storetime, stay_id, intime, charttime, outtime) |>
+# Get the list of the patients in icustays_tble
+patients_id_list <- icustays_tble |>
+  select(subject_id) |>
+  distinct() |>
+  pull()
+
+# Get the list of the required items in d_items.csv.gz
+items_id_list <- read_csv("~/mimic/icu/d_items.csv.gz") |>
+  filter(itemid %in% c(220045, 220179, 220180, 223761, 220210))
+
+# Get a subset of `chartevents.csv.gz`
+chartevents_sub <- open_dataset(sources = "./chartevents_pq",
+                                format = "parquet") |>
+  select(subject_id, itemid, charttime, valuenum) |>
+  filter(itemid %in% items_id_list$itemid) |>
+  filter(subject_id %in% patients_id_list) |>
+  collect() |>
+  distinct()
+
+chartevents_sub
+```
+
+**The final `chartevents_tble`**
+
+Restrict to the first vital measurement within the ICU stay.
+
+```{r, message=FALSE, warning = FALSE}
+chartevents_sub_2 = chartevents_sub |>
+  left_join(icustays_tble, by = "subject_id") |>
+  select(subject_id,
+         itemid,
+         valuenum,
+         stay_id,
+         intime,
+         charttime,
+         outtime) |>
   filter(charttime >= intime) |>
   filter(charttime <= outtime) |>
-  arrange(subject_id, stay_id, itemid) |>
   group_by(subject_id, stay_id, itemid) |>
   slice_min(order_by = charttime) |>
   select(subject_id, itemid, valuenum, stay_id)
-
-chartevents_q6_2
 ```
 
+Make the final data.
+
 ```{r}
-chartevents_q6_3 = chartevents_q6_2 |>
+chartevents_tble = chartevents_sub_2 |>
   pivot_wider(names_from = itemid, values_from = valuenum) |>
   arrange(subject_id, stay_id) |>
   ungroup() |>
-  rename(heart_rate = "220045", non_invasive_blood_pressure_systolic = "220179",
-         non_invasive_blood_pressure_diastolic= "220180",
-         temperature_fahrenheit = "223761", respiratory_rate = "220210") |>
+  rename(setNames(as.character(items_id_list$itemid),
+                  gsub(" ", "_", tolower(items_id_list$label)))) |>
   print(width = Inf)
 ```
-
-Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `chartevents_pq` folder available at the current working directory, for example, by a symbolic link.
 
 ## Q7. Putting things together
 
@@ -606,8 +648,8 @@ The final `mimic_icu_cohort` should have one row per ICU stay and columns for ea
 mimic_icu_cohort = icustays_tble |>
   left_join(admissions_tble, by = c("subject_id", "hadm_id")) |>
   left_join(patients_tble, by = "subject_id") |>
-  left_join(labevents_q5_3, by = c("subject_id", "stay_id")) |>
-  left_join(chartevents_q6_3, by = c("subject_id", "stay_id")) |>
+  left_join(labevents_tble, by = c("subject_id", "stay_id")) |>
+  left_join(chartevents_tble, by = c("subject_id", "stay_id")) |>
   filter(anchor_age >= 18) |>
   mutate(age_at_intime = anchor_age + round(
     as.numeric(difftime(intime, admittime))/(365 * 24 * 60 * 60))) |>
