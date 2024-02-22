@@ -53,7 +53,7 @@ Hint: We need to pull information from data files `patients.csv.gz`, `admissions
 
 **Answer**
 
-Put "labevents.parquet" in the current working directory, `hw3`, as "labevents_pq".
+Make the Parquet folder `labevents_pq` available at the current working directory `hw3`.
 
 ```{bash}
 #| eval: false
@@ -87,7 +87,7 @@ patient_race <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
   tolower()
 ```
 
-Retrieve the patient's top 3 diagnoses. I used 'hadn_id', 21243435.
+Retrieve the patient's top 3 diagnoses. I used 'hadm_id', 21243435.
 
 ```{r, message=FALSE}
 patient_diagnoses <- read_csv("~/mimic/hosp/diagnoses_icd.csv.gz") |>
@@ -95,12 +95,16 @@ patient_diagnoses <- read_csv("~/mimic/hosp/diagnoses_icd.csv.gz") |>
             by = c("icd_code", "icd_version")) |>
   filter(subject_id %in% patient_id) |>
   arrange(hadm_id, seq_num) |>
-  select(long_title) |>
+  select(long_title, hadm_id) |>
   slice_head(n = 3)
 
 diagnose_1 <- tolower(patient_diagnoses$long_title[1])
 diagnose_2 <- tolower(patient_diagnoses$long_title[2])
 diagnose_3 <- tolower(patient_diagnoses$long_title[3])
+```
+
+```{r}
+patient_diagnoses
 ```
 
 Make the ADT history data.
@@ -204,7 +208,7 @@ ICU stays are a subset of ADT history. This figure shows the vitals of the patie
 
 **Answer**
 
-Put "chartevents.parquet" in the current working directory, `hw3`, as "chartevents_pq".
+make the Parquet folder `chartevents_pq` available at the current working directory `hw3`.
 
 ```{bash}
 #| eval: false
@@ -341,6 +345,8 @@ zcat < ~/mimic/hosp/admissions.csv.gz | head
 
 Import `admissions.csv.gz` as a tibble `admissions_tble`.
 
+**Answer**
+
 ```{r, message=FALSE}
 admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
   as_tibble()
@@ -376,13 +382,16 @@ The number of admissions is highest at 00:00 and decreases until 06:00. However,
 
 ```{r, message=FALSE}
 admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
-  as_tibble() |>
-  mutate(admittime = with_tz(admittime, "UTC")) |>
-  mutate(admithour = format(admittime, "%H"))
+  as_tibble()
 ```
 
 ```{r}
-admissions_tble |>
+
+admissions_tble_hour <- admissions_tble |>
+  mutate(admittime = with_tz(admittime, "UTC")) |>
+  mutate(admithour = format(admittime, "%H"))
+
+admissions_tble_hour |>
   ggplot(aes(x = admithour)) +
   geom_bar() +
   labs(title = "Admission hour",
@@ -394,40 +403,36 @@ admissions_tble |>
 
 There is a peak at 00 minute, and then peak happens every 15 minutes. These peaks are getting smaller as the minute increases.
 
-```{r, message=FALSE}
-admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz") |>
-  as_tibble() |>
-  mutate(admitminute = format(admittime, "%M"))
-
-```
-
 ```{r}
-admissions_tble |>
+admissions_tble_min <- admissions_tble |>
+  mutate(admitminute = format(admittime, "%M"))
+  
+
+admissions_tble_min |>
   ggplot(aes(x = admitminute)) +
   geom_bar() +
   labs(title = "Admission minute",
        x = "Admission minute",
        y = "Admission Count") +
-  scale_x_discrete(breaks=seq(0, 60, by=5))
+  scale_x_discrete(breaks=seq(0, 60, by = 5))
 ```
 
 **length of hospital stay (from admission to discharge) (anything unusual?)**
 
-As the length of hospital stay increases, the number of patients decreases. The most common length of hospital stay is a few days.
-
-```{r, message=FALSE}
-admissions_tble <- admissions_tble |>
-  mutate(hos_stay = as.numeric(difftime(dischtime, admittime, units = "days")))
-```
+As the length of hospital stay increases, the number of events decreases. The most common length of hospital stay is a few days.
 
 ```{r}
-admissions_tble |>
+admissions_tble_los <- admissions_tble |>
+  mutate(hos_stay = as.numeric(difftime(dischtime, admittime, units = "days")))
+  
+admissions_tble_los |>
   ggplot(aes(x = hos_stay)) +
   geom_bar() +
   labs(title = "Length of hospital stay (days)",
        x = "Length of hospital stay (days)",
        y = "Count") 
 ```
+
 According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/concepts/#date-shifting),
 
 > All dates in the database have been shifted to protect patient confidentiality. Dates will be internally consistent for the same patient, but randomly distributed in the future. Dates of birth which occur in the present time are not true dates of birth. Furthermore, dates of birth which occur before the year 1900 occur if the patient is older than 89. In these cases, the patient’s age at their first admission has been fixed to 300.
@@ -457,7 +462,7 @@ Summarize variables `gender` and `anchor_age` by graphics, and explain any patte
 
 **Answer**
 
-Men and women have the similar patterns. The number of patients in their early 20s, both male and female, is high. Also, the number of female patients is higher than the number of male patients.
+Men and women have similar patterns. The number of patients in their early 20s, both male and female, is high. Also, the number of female patients is higher than that of male patients in all generations.
 
 ```{r}
 patients_tble |>
@@ -467,7 +472,6 @@ patients_tble |>
        x = "Age",
        y = "Count")
 ```
-
 
 ## Q5. Lab results
 
@@ -490,8 +494,7 @@ Hint: Use the Parquet format you generated in Homework 2. For reproducibility, m
 
 **Retrieve a subset of `labevents.csv.gz`**
 
-```{r}
-
+```{r, message=FALSE}
 # Get the list of the patients in icustays_tble
 patients_id_list <- icustays_tble |>
   select(subject_id) |>
@@ -508,7 +511,9 @@ items_id_list <- read_csv("~/mimic/hosp/d_labitems.csv.gz") |>
                        51221,
                        51301,
                        50931))
+```
 
+```{r}
 # Get a subset of `labevents.csv.gz`
 labevents_sub <- open_dataset(sources = "./labevents_pq", format = "parquet") |>
   select(subject_id, itemid, charttime, valuenum, storetime) |>
@@ -574,7 +579,7 @@ Hint: Use the Parquet format you generated in Homework 2. For reproducibility, m
 
 **Retrieve a subset of `chartevents.csv.gz`**
 
-```{r}
+```{r, message=FALSE}
 # Get the list of the patients in icustays_tble
 patients_id_list <- icustays_tble |>
   select(subject_id) |>
@@ -584,7 +589,9 @@ patients_id_list <- icustays_tble |>
 # Get the list of the required items in d_items.csv.gz
 items_id_list <- read_csv("~/mimic/icu/d_items.csv.gz") |>
   filter(itemid %in% c(220045, 220179, 220180, 223761, 220210))
+```
 
+```{r}
 # Get a subset of `chartevents.csv.gz`
 chartevents_sub <- open_dataset(sources = "./chartevents_pq",
                                 format = "parquet") |>
@@ -643,6 +650,7 @@ Let us create a tibble `mimic_icu_cohort` for all ICU stays, where rows are all 
 The final `mimic_icu_cohort` should have one row per ICU stay and columns for each variable.
 
 ![](mimic_icu_cohort.png)
+**Answer**
 
 ```{r}
 mimic_icu_cohort = icustays_tble |>
@@ -651,8 +659,10 @@ mimic_icu_cohort = icustays_tble |>
   left_join(labevents_tble, by = c("subject_id", "stay_id")) |>
   left_join(chartevents_tble, by = c("subject_id", "stay_id")) |>
   filter(anchor_age >= 18) |>
-  mutate(age_at_intime = anchor_age + round(
-    as.numeric(difftime(intime, admittime))/(365 * 24 * 60 * 60))) |>
+  mutate(age_at_intime = anchor_age + 
+           as.numeric(format(intime, "%Y")) - anchor_year) |>
+  #mutate(age_at_intime = anchor_age + round(
+    #as.numeric(difftime(intime, admittime))/(365 * 24 * 60 * 60))) |>
   print(width = Inf)
 ```
 ## Q8. Exploratory data analysis (EDA)
@@ -662,6 +672,25 @@ Summarize the following information about the ICU stay cohort `mimic_icu_cohort`
 -   Length of ICU stay `los` vs demographic variables (race, insurance, marital_status, gender, age at intime)
 
 **los vs race**
+
+This is the basic statistics of the length of ICU stay by race.
+
+```{r}
+race_los <- mimic_icu_cohort |>
+  group_by(race) |>
+  summarise(
+    n = n(),
+    mean_los = mean(los),
+    median_los = median(los),
+    max_los = max(los),
+    min_los = min(los),
+    sd_los = sd(los),
+    iqr_los = IQR(los))
+
+race_los
+```
+
+As for the graph, "race" are categorized into "ASIAN", "WHITE", "BLACK", "HISPANIC", and "OTHER". This is the box plot of the length ICU by the category. 
 
 ```{r}
 race_los <- mimic_icu_cohort |>
@@ -680,33 +709,23 @@ gg_race_los <- race_los |>
 
 gg_race_los
 ```
+Without the outlier, the box plot is as follows.
 
 ```{r}
-race_los <- mimic_icu_cohort |>
-  group_by(race) |>
-  summarise(
-    n = n(),
-    mean_los = mean(los),
-    median_los = median(los),
-    max_los = max(los),
-    min_los = min(los),
-    sd_los = sd(los),
-    iqr_los = IQR(los))
-race_los
+gg_race_los <- race_los |>
+  ggplot(aes(x = race_type, y = los)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(title = "Length of ICU stay by race",
+       x = "race",
+       y = "Length of ICU stay") + 
+  coord_cartesian(ylim = c(0, 10))
+
+gg_race_los
 ```
 
 **los vs insurance**
 
-```{r}
-insurance_los <- mimic_icu_cohort |>
-  ggplot(aes(x = insurance, y = los)) +
-  geom_boxplot() +
-  labs(title = "Length of ICU stay by insurance",
-       x = "Insurance",
-       y = "Length of ICU stay")
-
-insurance_los
-```
+This is the basic statistics of the length of ICU stay by insurance.
 
 ```{r}
 insurance_los <- mimic_icu_cohort |>
@@ -723,21 +742,40 @@ insurance_los <- mimic_icu_cohort |>
 insurance_los
 ```
 
-**los vs marital status**
+This is the box plot of the length of ICU by insurance.
 
 ```{r}
-marital_status_los <- mimic_icu_cohort |>
-  ggplot(aes(x = marital_status, y = los)) +
-  geom_point() +
-  labs(title = "Length of ICU stay by marital status",
-       x = "Marital status",
+insurance_los <- mimic_icu_cohort |>
+  ggplot(aes(x = insurance, y = los)) +
+  geom_boxplot() +
+  labs(title = "Length of ICU stay by insurance",
+       x = "Insurance",
        y = "Length of ICU stay")
 
-marital_status_los
+insurance_los
 ```
+Without the outlier, the box plot is as follows.
+
+```{r}
+insurance_los <- mimic_icu_cohort |>
+  ggplot(aes(x = insurance, y = los)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(title = "Length of ICU stay by insurance",
+       x = "Insurance",
+       y = "Length of ICU stay") +
+  coord_cartesian(ylim = c(0, 9))
+
+insurance_los
+```
+
+**los vs marital status**
+
+This is the basic statistics of the length of ICU stay by marital status. I put "OTHERS" for the missing values.
 
 ```{r}
 marital_status_los <- mimic_icu_cohort |>
+  mutate(marital_status = ifelse(is.na(marital_status),
+                                 "OTHERS", marital_status)) |>
   group_by(marital_status) |>
   summarise(
     n = n(),
@@ -750,19 +788,41 @@ marital_status_los <- mimic_icu_cohort |>
 
 marital_status_los
 ```
+This is the box plot of the length of ICU stay by marital status. I put "OTHERS" for the missing values.
+
+```{r}
+marital_status_los <- mimic_icu_cohort |>
+  mutate(marital_status = ifelse(is.na(marital_status),
+                                 "OTHERS", marital_status)) |>
+  ggplot(aes(x = marital_status, y = los)) +
+  geom_boxplot() +
+  labs(title = "Length of ICU stay by marital status",
+       x = "Marital status",
+       y = "Length of ICU stay")
+
+marital_status_los
+```
+
+Without the outlier, the box plot is as follows. I put "OTHERS" for the missing values.
+
+```{r}
+marital_status_los <- mimic_icu_cohort |>
+  mutate(marital_status = ifelse(is.na(marital_status),
+                                 "OTHERS", marital_status)) |>
+  ggplot(aes(x = marital_status, y = los)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(title = "Length of ICU stay by marital status",
+       x = "Marital status",
+       y = "Length of ICU stay") +
+  coord_cartesian(ylim = c(0, 12))
+
+marital_status_los
+```
+
 
 **los vs gender**
 
-```{r}
-gender_los <- mimic_icu_cohort |>
-  ggplot(aes(x = los, color = gender)) +
-  geom_bar() +
-  labs(title = "Length of ICU stay by gender",
-       x = "Length of ICU stay",
-       y = "Count")
-
-gender_los
-```
+This is the basic statistics of the length of ICU stay by gender. 
 
 ```{r}
 gender_los <- mimic_icu_cohort |>
@@ -779,18 +839,36 @@ gender_los <- mimic_icu_cohort |>
 gender_los
 ```
 
-**los vs age at intime**
+This is the box plot of the length of ICU stay by gender.
 
 ```{r}
-age_at_intime_los <- mimic_icu_cohort |>
-  ggplot(aes(x = age_at_intime, y = los)) +
-  geom_point() +
-  labs(title = "Length of ICU stay vs age at intime",
-       x = "Age at intime",
-       y = "Length of ICU stay")
+gender_los <- mimic_icu_cohort |>
+  ggplot(aes(x = gender, y = los)) +
+  geom_boxplot() +
+  labs(title = "Length of ICU stay by gender",
+       x = "gender",
+       y = "Length of ICU stay") 
 
-age_at_intime_los
+gender_los
 ```
+
+Without the outlier, the box plot is as follows.
+
+```{r}
+gender_los <- mimic_icu_cohort |>
+  ggplot(aes(x = gender, y = los)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(title = "Length of ICU stay by gender",
+       x = "gender",
+       y = "Length of ICU stay") +
+  coord_cartesian(ylim = c(0, 8))
+
+gender_los
+```
+
+**los vs age at intime**
+
+This is the basic statistics of the length of ICU stay by age at intime.
 
 ```{r}
 age_at_intime_los <- mimic_icu_cohort |>
@@ -807,9 +885,26 @@ age_at_intime_los <- mimic_icu_cohort |>
 age_at_intime_los
 ```
 
--   Length of ICU stay `los` vs the last available lab measurements before ICU stay
+This is the scatter plot of the length of ICU stay by age at intime.
 
 ```{r}
+age_at_intime_los <- mimic_icu_cohort |>
+  ggplot(aes(x = age_at_intime, y = los)) +
+  geom_point() +
+  labs(title = "Length of ICU stay vs age at intime",
+       x = "Age at intime",
+       y = "Length of ICU stay")
+
+age_at_intime_los
+```
+
+-   Length of ICU stay `los` vs the last available lab measurements before ICU stay
+
+**Answer**
+
+This is the scatter plot of the length of ICU stay by the last available lab measurements before ICU stay.
+
+```{r, warning=FALSE}
 lab_los <- mimic_icu_cohort |>
   select(los, creatinine, potassium, sodium, chloride, bicarbonate, hematocrit, wbc, glucose) |>
   pivot_longer(cols = -los, names_to = "lab", values_to = "value") |>
@@ -823,27 +918,34 @@ lab_los <- mimic_icu_cohort |>
 lab_los
 ```
 
--   Length of ICU stay `los` vs the average vital measurements within the first hour of ICU stay
+-   Length of ICU stay `los` vs the first vital measurement within the ICU stay.
 
-```{r}
+**Answer**
+
+This is the scatter plot of the length of ICU stay by the first vital measurement within the ICU stay.
+
+```{r, warning=FALSE}
 vital_los <- mimic_icu_cohort |>
   select(los, heart_rate, non_invasive_blood_pressure_systolic,
          non_invasive_blood_pressure_diastolic, temperature_fahrenheit,
          respiratory_rate) |>
   pivot_longer(cols = -los, names_to = "vital", values_to = "value") |>
-  group_by(vital) |>
-  summarise(
-    mean_value = mean(value, na.rm = TRUE),
-    median_value = median(value, na.rm = TRUE),
-    max_value = max(value, na.rm = TRUE),
-    min_value = min(value, na.rm = TRUE),
-    sd_value = sd(value, na.rm = TRUE),
-    iqr_value = IQR(value, na.rm = TRUE)) 
+  ggplot(aes(x = value, y = los)) +
+  geom_point() +
+  facet_wrap(~vital, scales = "free") +
+  labs(title = "Length of ICU stay vs First vital measurement within
+       the ICU stay.",
+       x = "Vital value",
+       y = "Length of ICU stay")
 
 vital_los
 ```
 
 -   Length of ICU stay `los` vs first ICU unit
+
+**Answer**
+
+This is the basic statistics of the length of ICU stay by first ICU unit.
 
 ```{r}
 unit_los <- mimic_icu_cohort |>
@@ -860,6 +962,8 @@ unit_los <- mimic_icu_cohort |>
 unit_los
 ```
 
+This is the box plot of the length of ICU stay by first ICU unit.
+
 ```{r}
 unit_los <- mimic_icu_cohort |>
   ggplot(aes(x = los, y = first_careunit)) +
@@ -870,3 +974,18 @@ unit_los <- mimic_icu_cohort |>
 
 unit_los
 ```
+Without the outlier, the box plot is as follows.
+
+```{r}
+unit_los <- mimic_icu_cohort |>
+  ggplot(aes(x = los, y = first_careunit)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(title = "Length of ICU stay vs first ICU unit",
+       x = "Length of ICU stay",
+       y = "First ICU unit") +
+  coord_cartesian(xlim = c(0, 18))
+
+unit_los
+```
+
+```{r}
