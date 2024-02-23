@@ -161,8 +161,8 @@ procedures <- read_csv("~/mimic/hosp/procedures_icd.csv.gz") |>
          chartdate = with_tz(chartdate, "UTC")) |>
   # Fix the date format
   mutate(chartdate = as.POSIXct(chartdate, format = "%Y-%m-%d %H:%M:%S")) |>
-  # Make the length of long_title less than 20
-  mutate(long_title = str_sub(long_title, 1, 20))
+  # Make the length of long_title less than 50
+  mutate(long_title = str_sub(long_title, 1, 50))
 
 # Get the number of the distinctive procedures
 long_title_num <- procedures |>
@@ -189,7 +189,7 @@ ggplot() +
         axis.title.y = element_blank()) +
   guides(linewidth = "none",
          color = guide_legend(order = 2, title = "Care Unit"),
-         shape = guide_legend(order = 1, title = "Procedure")) +
+         shape = guide_legend(order = 1, title = "Procedure", ncol = 2)) +
   labs(title = paste0("Patient ",
                       patient_id, ", ",
                       patient_gender, ", ",
@@ -287,9 +287,9 @@ zcat < ~/mimic/icu/icustays.csv.gz | head
 
 ### Q2.1 Ingestion
 
-**Answer**
-
 Import `icustays.csv.gz` as a tibble `icustays_tble`.
+
+**Answer**
 
 ```{r, message=FALSE}
 icustays_tble <- read_csv("~/mimic/icu/icustays.csv.gz") |>
@@ -361,6 +361,10 @@ Summarize the following information by graphics and explain any patterns you see
 -   admission minute (anything unusual?)\
 -   length of hospital stay (from admission to discharge) (anything unusual?)
 
+According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/concepts/#date-shifting),
+
+> All dates in the database have been shifted to protect patient confidentiality. Dates will be internally consistent for the same patient, but randomly distributed in the future. Dates of birth which occur in the present time are not true dates of birth. Furthermore, dates of birth which occur before the year 1900 occur if the patient is older than 89. In these cases, the patient’s age at their first admission has been fixed to 300.
+
 **Number of admissions per patient**
 
 As the number of admissions per patient increases, the number of patients decreases. 
@@ -413,7 +417,7 @@ admissions_tble_min |>
 
 **length of hospital stay (from admission to discharge) (anything unusual?)**
 
-As the length of hospital stay increases, the number of events decreases. The most common length of hospital stay is a few days.
+As the length of hospital stay increases, the number of events decreases. Many patients are discharged within days or weeks.
 
 ```{r}
 admissions_tble_los <- admissions_tble |>
@@ -421,15 +425,14 @@ admissions_tble_los <- admissions_tble |>
   
 admissions_tble_los |>
   ggplot(aes(x = hos_stay)) +
-  geom_bar() +
+  #geom_bar() +
+  geom_histogram(binwidth = 1) +
   labs(title = "Length of hospital stay (days)",
        x = "Length of hospital stay (days)",
        y = "Count") 
+
+
 ```
-
-According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/concepts/#date-shifting),
-
-> All dates in the database have been shifted to protect patient confidentiality. Dates will be internally consistent for the same patient, but randomly distributed in the future. Dates of birth which occur in the present time are not true dates of birth. Furthermore, dates of birth which occur before the year 1900 occur if the patient is older than 89. In these cases, the patient’s age at their first admission has been fixed to 300.
 
 ## Q4. `patients` data
 
@@ -456,7 +459,7 @@ Summarize variables `gender` and `anchor_age` by graphics, and explain any patte
 
 **Answer**
 
-Men and women have similar patterns. The number of patients in their early 20s, both male and female, is high. Also, the number of female patients is higher than that of male patients in all generations.
+Men and women have similar trends. The number of patients in their teens and twenties, both male and female, is high. Also, the number of female patients is higher than that of male patients in all generations. (The number of the oldest people is also somehow high.)
 
 ```{r}
 patients_tble |>
