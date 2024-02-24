@@ -161,8 +161,8 @@ procedures <- read_csv("~/mimic/hosp/procedures_icd.csv.gz") |>
          chartdate = with_tz(chartdate, "UTC")) |>
   # Fix the date format
   mutate(chartdate = as.POSIXct(chartdate, format = "%Y-%m-%d %H:%M:%S")) |>
-  # Make the length of long_title less than 50
-  mutate(long_title = str_sub(long_title, 1, 50))
+  # Make the length of long_title less than 49
+  mutate(long_title = str_sub(long_title, 1, 49))
 
 # Get the number of the distinctive procedures
 long_title_num <- procedures |>
@@ -367,7 +367,7 @@ According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/co
 
 **Number of admissions per patient**
 
-As the number of admissions per patient increases, the number of patients decreases. 
+As the number of admissions per patient increases, the number of patients decreases. This looks right skewed. (Note that some patients have many admissions.) 
 
 ```{r}
 admissions_tble |>
@@ -382,7 +382,7 @@ admissions_tble |>
 
 **Admission hour (anything unusual?)**
 
-The number of admissions is highest at 00:00 and decreases until 06:00. However, it increases sharply again at 07:00, and then declines at 08:00. Thereafter, it gradually increases until 18:00.
+The number of admissions is highest at 00:00 and decreases until 06:00. However, it increases sharply again at 07:00, and then declines at 08:00. Thereafter, it gradually increases until 18:00. This might be related to the emergency admissions at midnight and in the morning.
 
 ```{r}
 admissions_tble_hour <- admissions_tble |>
@@ -400,7 +400,7 @@ admissions_tble_hour |>
 
 **Admission minute (anything unusual?)**
 
-There is a peak at 00 minute, and then peak happens every 15 minutes. These peaks are getting smaller as the minute increases.
+There is a peak at 00 minutes, and then the peak happens every 15 minutes. These peaks are getting smaller as the minute increases. This might be related to the rounding issue of the admission time.
 
 ```{r}
 admissions_tble_min <- admissions_tble |>
@@ -417,7 +417,7 @@ admissions_tble_min |>
 
 **length of hospital stay (from admission to discharge) (anything unusual?)**
 
-As the length of hospital stay increases, the number of events decreases. Many patients are discharged within days or weeks.
+As the length of hospital stay increases, the number of events decreases.This looks right skewed. Many patients are discharged within days or weeks.
 
 ```{r}
 admissions_tble_los <- admissions_tble |>
@@ -425,13 +425,10 @@ admissions_tble_los <- admissions_tble |>
   
 admissions_tble_los |>
   ggplot(aes(x = hos_stay)) +
-  #geom_bar() +
   geom_histogram(binwidth = 1) +
   labs(title = "Length of hospital stay (days)",
        x = "Length of hospital stay (days)",
        y = "Count") 
-
-
 ```
 
 ## Q4. `patients` data
@@ -459,15 +456,42 @@ Summarize variables `gender` and `anchor_age` by graphics, and explain any patte
 
 **Answer**
 
-Men and women have similar trends. The number of patients in their teens and twenties, both male and female, is high. Also, the number of female patients is higher than that of male patients in all generations. (The number of the oldest people is also somehow high.)
+(Gender-wise Patient Counts)
+The number of female patients is slightly higher than that of males.
+
+```{r}
+patients_tble |>
+  group_by(gender) |>
+  summarize(n = n()) |>
+  ggplot(aes(x = gender, y = n, fill = gender)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Gender-wise Patient Counts",
+       x = "Gender",
+       y = "Number of Patients") +
+  theme_minimal()
+```
+(Density Plot)
+The distribution of the anchor_age is almost the same for men and women. However, it seems like the number of female patients in their 20s and 30s is greater than that of male patients. Additionally, the number of male patients in their 40s and 70s is greater than that of female patients. Finally, the number of female patients in their 80s is greater than that of male patients.
 
 ```{r}
 patients_tble |>
   ggplot(aes(x = anchor_age, color = gender)) +
-  geom_bar() +
-  labs(title = "Age distribution by gender",
-       x = "Age",
-       y = "Count")
+  geom_density() +
+  labs(title = "Density Plot by gender",
+       x = "anchor_age",
+       y = "Density")
+```
+
+(Box Plot)
+They have similar distributions of anchor_age. however, it looks like the median of the anchor_age of the male patients is slightly higher than that of the female patients.
+
+```{r}
+patients_tble |>
+  ggplot(aes(y = anchor_age, x = gender, color = gender)) +
+  geom_boxplot() +
+  labs(title = "Box Plot by gender",
+       x = "Gender",
+       y = "anchor_age")
 ```
 
 ## Q5. Lab results
@@ -530,6 +554,7 @@ Restrict to the last available measurement (by `storetime`) before the ICU stay.
 labevents_sub2 <- labevents_sub |>
   left_join(icustays_tble, by = "subject_id") |>
   select(subject_id, itemid, valuenum, storetime, stay_id, intime, charttime) |>
+  # Measurement before the ICU stay
   filter(storetime < intime) |>
   group_by(subject_id, stay_id, itemid) |>
   # Get the latest storetime
@@ -616,9 +641,11 @@ chartevents_sub_2 <- chartevents_sub |>
          intime,
          charttime,
          outtime) |>
+  # Vital measurement within the ICU stay
   filter(charttime >= intime) |>
   filter(charttime <= outtime) |>
   group_by(subject_id, stay_id, itemid) |>
+  # Get the first charttime
   slice_min(order_by = charttime) |>
   select(subject_id, itemid, valuenum, stay_id)
 ```
@@ -658,7 +685,7 @@ mimic_icu_cohort = icustays_tble |>
   left_join(patients_tble, by = "subject_id") |>
   left_join(labevents_tble, by = c("subject_id", "stay_id")) |>
   left_join(chartevents_tble, by = c("subject_id", "stay_id")) |>
-  mutate(age_at_intime = anchor_age + 
+  mutate(age_at_intime = anchor_age +
            as.numeric(format(intime, "%Y")) - anchor_year) |>
   filter(age_at_intime >= 18)
 
@@ -716,7 +743,7 @@ gg_race_los <- race_los |>
   geom_boxplot(outlier.shape = NA) +
   labs(title = "Length of ICU stay by race (without outlier)",
        x = "Race",
-       y = "Length of ICU stay") + 
+       y = "Length of ICU stay") +
   coord_cartesian(ylim = c(0, 10))
 
 gg_race_los
@@ -889,7 +916,7 @@ This is the scatter plot of the length of ICU stay by age at intime.
 age_at_intime_los <- mimic_icu_cohort |>
   ggplot(aes(x = age_at_intime, y = los)) +
   geom_point() +
-  labs(title = "Length of ICU stay vs age at intime",
+  labs(title = "Length of ICU stay vs Age at intime",
        x = "Age at intime",
        y = "Length of ICU stay")
 
@@ -904,13 +931,21 @@ This is the scatter plot of the length of ICU stay by the last available lab mea
 
 ```{r, warning=FALSE}
 lab_los <- mimic_icu_cohort |>
-  select(los, creatinine, potassium, sodium, chloride, bicarbonate, hematocrit, wbc, glucose) |>
+  select(los,
+         creatinine,
+         potassium,
+         sodium,
+         chloride,
+         bicarbonate,
+         hematocrit,
+         wbc,
+         glucose) |>
   pivot_longer(cols = - los, names_to = "lab", values_to = "value") |>
   ggplot(aes(x = value, y = los)) +
   geom_point() +
   facet_wrap(~ lab, scales = "free") +
   labs(title = paste0("Length of ICU stay vs ",
-                      "the last available lab measurements before ICU stay"),
+                      "Last available lab measurements before ICU stay"),
        x = "Lab value",
        y = "Length of ICU stay")
 
@@ -943,9 +978,9 @@ vital_los <- mimic_icu_cohort |>
   geom_point() +
   facet_wrap(~ vital, scales = "free") +
   labs(title = paste0("Length of ICU stay vs ",
-  "First vital measurement within the ICU stay"),
-  x = "Vital value",
-  y = "Length of ICU stay")
+                      "First vital measurement within the ICU stay"),
+       x = "Vital value",
+       y = "Length of ICU stay")
 
 vital_los
 ```
@@ -975,10 +1010,12 @@ vital_los_trim <- mimic_icu_cohort |>
   ggplot(aes(x = value, y = los)) +
   geom_point() +
   facet_wrap(~ vital, scales = "free") +
-  labs(title = paste0("Length of ICU stay vs ",
-  "First vital measurement within the ICU stay (without outlier)"),
-  x = "Vital value",
-  y = "Length of ICU stay")
+  labs(title = paste0(
+    "Length of ICU stay vs ",
+    "First vital measurement within the ICU stay"),
+    subtitle = "(Without outlier)",
+    x = "Vital value",
+    y = "Length of ICU stay")
   
 vital_los_trim
 ```
@@ -1010,7 +1047,7 @@ This is the box plot of the length of ICU stay by first ICU unit.
 unit_los <- mimic_icu_cohort |>
   ggplot(aes(x = los, y = first_careunit)) +
   geom_boxplot() +
-  labs(title = "Length of ICU stay vs first ICU unit",
+  labs(title = "Length of ICU stay vs First ICU unit",
        x = "Length of ICU stay",
        y = "First ICU unit")
 
@@ -1023,7 +1060,8 @@ Without the outlier, the box plot is as follows.
 unit_los <- mimic_icu_cohort |>
   ggplot(aes(x = los, y = first_careunit)) +
   geom_boxplot(outlier.shape = NA) +
-  labs(title = "Length of ICU stay vs first ICU unit (without outlier)",
+  labs(title = "Length of ICU stay vs First ICU unit",
+       subtitle = "(Without outlier)",
        x = "Length of ICU stay",
        y = "First ICU unit") +
   coord_cartesian(xlim = c(0, 18))
