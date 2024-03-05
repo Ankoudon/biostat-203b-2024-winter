@@ -3154,8 +3154,8 @@ loaded via a namespace (and not attached):
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Totalram:   16.000 GiB 
-Freeram:   253.844 MiB </code></pre>
+<pre><code>Totalram:  16.000 GiB 
+Freeram:   61.703 MiB </code></pre>
 </div>
 </div>
 <p>Load database libraries and the tidyverse frontend:</p>
@@ -3197,7 +3197,7 @@ Freeram:   253.844 MiB </code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># connect to the BigQuery database `biostat-203b-2024-winter.mimic4_v2_2`</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>con_bq <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    bigrquery<span class="sc">::</span><span class="fu">bigquery</span>(),</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  bigrquery<span class="sc">::</span><span class="fu">bigquery</span>(),</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">project =</span> <span class="st">&quot;biostat-203b-2024-winter&quot;</span>,</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">dataset =</span> <span class="st">&quot;mimic4_v2_2&quot;</span>,</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">billing =</span> <span class="st">&quot;biostat-203b-2024-winter&quot;</span></span>
@@ -3490,16 +3490,15 @@ Freeram:   253.844 MiB </code></pre>
 <span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;non_invasive_blood_pressure_systolic&quot;</span>,</span>
 <span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;non_invasive_blood_pressure_diastolic&quot;</span>,</span>
 <span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;temperature_fahrenheit&quot;</span>,</span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;respiratory_rate&quot;</span>)</span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>      ))) <span class="sc">|&gt;</span></span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(subject_id,</span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>         stay_id,</span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>         heart_rate,</span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>         non_invasive_blood_pressure_systolic,</span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>         non_invasive_blood_pressure_diastolic,</span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>         respiratory_rate,</span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>         temperature_fahrenheit) <span class="sc">|&gt;</span></span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">width =</span> <span class="cn">Inf</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;respiratory_rate&quot;</span>)))) <span class="sc">|&gt;</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(subject_id,</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>         stay_id,</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>         heart_rate,</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>         non_invasive_blood_pressure_systolic,</span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>         non_invasive_blood_pressure_diastolic,</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>         respiratory_rate,</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>         temperature_fahrenheit) <span class="sc">|&gt;</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">width =</span> <span class="cn">Inf</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># Source:     SQL [?? x 7]
 # Database:   BigQueryConnection
@@ -3543,8 +3542,8 @@ Freeram:   253.844 MiB </code></pre>
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(admissions_tble, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;subject_id&quot;</span>, <span class="st">&quot;hadm_id&quot;</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(patients_tble, <span class="at">by =</span> <span class="st">&quot;subject_id&quot;</span>) <span class="sc">|&gt;</span></span>
 <span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># (iii) keep adults only (age at ICU intime &gt;= 18) |&gt;</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_at_intime =</span> anchor_age <span class="sc">+</span> <span class="fu">year</span>(intime) <span class="sc">-</span> anchor_year) <span class="sc">|&gt;</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(age_at_intime <span class="sc">&gt;=</span> <span class="dv">18</span>) <span class="sc">|&gt;</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_intime =</span> anchor_age <span class="sc">+</span> <span class="fu">year</span>(intime) <span class="sc">-</span> anchor_year) <span class="sc">|&gt;</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(age_intime <span class="sc">&gt;=</span> <span class="dv">18</span>) <span class="sc">|&gt;</span></span>
 <span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># (iv) merge in the labevents and chartevents tables</span></span>
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(labevents_tble, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;subject_id&quot;</span>, <span class="st">&quot;stay_id&quot;</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(chartevents_tble, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;subject_id&quot;</span>, <span class="st">&quot;stay_id&quot;</span>)) <span class="sc">|&gt;</span></span>
@@ -3631,18 +3630,18 @@ ORDER BY is ignored in subqueries without LIMIT
  8                    0 F              73        2155 2014 - 2016       NA    
  9                    0 M              58        2176 2017 - 2019       NA    
 10                    0 M              58        2176 2017 - 2019       NA    
-   age_at_intime bicarbonate chloride creatinine glucose potassium sodium
-           &lt;int&gt;       &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;
- 1            33          NA       NA       NA        NA      NA       NA
- 2            83          22      108        0.6     143       3.2    140
- 3            20          NA       NA       NA        NA      NA       NA
- 4            38          22      102        0.7     139       3.5    141
- 5            65          NA       NA       NA        NA      NA       NA
- 6            68          NA       NA       NA        NA      NA       NA
- 7            74          26      105        0.8      86       3.5    138
- 8            73          26      101        0.9     119       4.1    140
- 9            58          29      105        0.8      85       4      143
-10            58          23      104        0.6     118       3.3    141
+   age_intime bicarbonate chloride creatinine glucose potassium sodium
+        &lt;int&gt;       &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;
+ 1         33          NA       NA       NA        NA      NA       NA
+ 2         83          22      108        0.6     143       3.2    140
+ 3         20          NA       NA       NA        NA      NA       NA
+ 4         38          22      102        0.7     139       3.5    141
+ 5         65          NA       NA       NA        NA      NA       NA
+ 6         68          NA       NA       NA        NA      NA       NA
+ 7         74          26      105        0.8      86       3.5    138
+ 8         73          26      101        0.9     119       4.1    140
+ 9         58          29      105        0.8      85       4      143
+10         58          23      104        0.6     118       3.3    141
    hematocrit   wbc heart_rate non_invasive_blood_pressure_systolic
         &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;                                &lt;dbl&gt;
  1       NA    NA           86                                  108
@@ -3678,46 +3677,48 @@ ORDER BY is ignored in subqueries without LIMIT
 <iframe width="95%" height="500" src="./mimic_icu_cohort_gtsummary.html">
 </iframe>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Can i use this mimic_icu_cohort?</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>mimic_icu_cohort_pre <span class="ot">&lt;-</span> mimic_icu_cohort <span class="sc">|&gt;</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">first_careunit =</span> <span class="fu">fct_lump</span>(first_careunit, <span class="at">n =</span> <span class="dv">4</span>),</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">last_careunit =</span> <span class="fu">fct_lump</span>(last_careunit, <span class="at">n =</span> <span class="dv">4</span>),</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">admission_type =</span> <span class="fu">fct_lump</span>(admission_type, <span class="at">n =</span> <span class="dv">4</span>),</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">admission_location =</span> <span class="fu">fct_lump</span>(admission_location, <span class="at">n =</span> <span class="dv">3</span>),</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">discharge_location =</span> <span class="fu">fct_lump</span>(discharge_location, <span class="at">n =</span> <span class="dv">4</span>),</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">los_long =</span> <span class="fu">if_else</span>(los <span class="sc">&gt;=</span> <span class="dv">2</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Change later!</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">race =</span> <span class="fu">if_else</span>(</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(race, <span class="st">&quot;ASIAN&quot;</span>), <span class="st">&quot;ASIAN&quot;</span>, <span class="fu">if_else</span>(</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">str_detect</span>(race, <span class="st">&quot;WHITE&quot;</span>), <span class="st">&quot;WHITE&quot;</span>, <span class="fu">if_else</span>(</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>          <span class="fu">str_detect</span>(race, <span class="st">&quot;BLACK&quot;</span>), <span class="st">&quot;BLACK&quot;</span>, <span class="fu">if_else</span>(</span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>            <span class="fu">str_detect</span>(race, <span class="st">&quot;HISPANIC&quot;</span>), <span class="st">&quot;HISPANIC&quot;</span>, <span class="st">&quot;OTHER&quot;</span>))))) <span class="sc">|&gt;</span></span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(first_careunit, last_careunit, los, admission_type, admission_location,</span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>         discharge_location,insurance, language, marital_status, </span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>         race, los_long, hospital_expire_flag, gender, dod, sodium, chloride, </span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>         creatinine, potassium, glucose, hematocrit, wbc, bicarbonate, </span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>         temperature_fahrenheit, non_invasive_blood_pressure_diastolic,</span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>         respiratory_rate, non_invasive_blood_pressure_systolic, heart_rate,</span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>         age_at_intime) <span class="sc">|&gt;</span></span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tbl_summary</span>(<span class="at">by =</span> los_long)</span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>mimic_icu_cohort_pre</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>mimic_icu_cohort_pre <span class="ot">&lt;-</span> mimic_icu_cohort <span class="sc">|&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">first_careunit =</span> <span class="fu">fct_lump</span>(first_careunit, <span class="at">n =</span> <span class="dv">4</span>),</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">last_careunit =</span> <span class="fu">fct_lump</span>(last_careunit, <span class="at">n =</span> <span class="dv">4</span>),</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">admission_type =</span> <span class="fu">fct_lump</span>(admission_type, <span class="at">n =</span> <span class="dv">4</span>),</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">admission_location =</span> <span class="fu">fct_lump</span>(admission_location, <span class="at">n =</span> <span class="dv">3</span>),</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">discharge_location =</span> <span class="fu">fct_lump</span>(discharge_location, <span class="at">n =</span> <span class="dv">4</span>),</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">los_long =</span> <span class="fu">if_else</span>(los <span class="sc">&gt;=</span> <span class="dv">2</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">race =</span> <span class="fu">fct_collapse</span>(</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>      race, </span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">ASIAN =</span> mimic_icu_cohort<span class="sc">$</span>race[<span class="fu">str_detect</span>(mimic_icu_cohort<span class="sc">$</span>race, <span class="st">&quot;ASIAN&quot;</span>)],</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">WHITE =</span> mimic_icu_cohort<span class="sc">$</span>race[<span class="fu">str_detect</span>(mimic_icu_cohort<span class="sc">$</span>race, <span class="st">&quot;WHITE&quot;</span>)],</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">BLACK =</span> mimic_icu_cohort<span class="sc">$</span>race[<span class="fu">str_detect</span>(mimic_icu_cohort<span class="sc">$</span>race, <span class="st">&quot;BLACK&quot;</span>)],</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">HISPANIC =</span> mimic_icu_cohort<span class="sc">$</span>race[<span class="fu">str_detect</span>(mimic_icu_cohort<span class="sc">$</span>race,</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>                                                  <span class="st">&quot;HISPANIC&quot;</span>)],</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">other_level =</span> <span class="st">&quot;Other&quot;</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>      )) <span class="sc">|&gt;</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(first_careunit, last_careunit, los, admission_type, admission_location,</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>         discharge_location,insurance, language, marital_status, </span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>         race, los_long, hospital_expire_flag, gender, dod, sodium, chloride, </span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>         creatinine, potassium, glucose, hematocrit, wbc, bicarbonate, </span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>         temperature_fahrenheit, non_invasive_blood_pressure_diastolic,</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>         respiratory_rate, non_invasive_blood_pressure_systolic, heart_rate,</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>         age_intime) <span class="sc">|&gt;</span></span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tbl_summary</span>(<span class="at">by =</span> los_long)</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>mimic_icu_cohort_pre</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<div id="vzrrhqwasl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#vzrrhqwasl table {
+<div id="tnmnzhisyl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#tnmnzhisyl table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#vzrrhqwasl thead, #vzrrhqwasl tbody, #vzrrhqwasl tfoot, #vzrrhqwasl tr, #vzrrhqwasl td, #vzrrhqwasl th {
+#tnmnzhisyl thead, #tnmnzhisyl tbody, #tnmnzhisyl tfoot, #tnmnzhisyl tr, #tnmnzhisyl td, #tnmnzhisyl th {
 border-style: none;
 }
-#vzrrhqwasl p {
+#tnmnzhisyl p {
 margin: 0;
 padding: 0;
 }
-#vzrrhqwasl .gt_table {
+#tnmnzhisyl .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -3742,11 +3743,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_caption {
+#tnmnzhisyl .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#vzrrhqwasl .gt_title {
+#tnmnzhisyl .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -3757,7 +3758,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#vzrrhqwasl .gt_subtitle {
+#tnmnzhisyl .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -3768,7 +3769,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#vzrrhqwasl .gt_heading {
+#tnmnzhisyl .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -3779,12 +3780,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_bottom_border {
+#tnmnzhisyl .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_col_headings {
+#tnmnzhisyl .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -3798,7 +3799,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_col_heading {
+#tnmnzhisyl .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3817,7 +3818,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#vzrrhqwasl .gt_column_spanner_outer {
+#tnmnzhisyl .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3828,13 +3829,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#vzrrhqwasl .gt_column_spanner_outer:first-child {
+#tnmnzhisyl .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#vzrrhqwasl .gt_column_spanner_outer:last-child {
+#tnmnzhisyl .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#vzrrhqwasl .gt_column_spanner {
+#tnmnzhisyl .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -3845,10 +3846,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#vzrrhqwasl .gt_spanner_row {
+#tnmnzhisyl .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#vzrrhqwasl .gt_group_heading {
+#tnmnzhisyl .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3873,7 +3874,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#vzrrhqwasl .gt_empty_group_heading {
+#tnmnzhisyl .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -3887,13 +3888,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#vzrrhqwasl .gt_from_md > :first-child {
+#tnmnzhisyl .gt_from_md > :first-child {
 margin-top: 0;
 }
-#vzrrhqwasl .gt_from_md > :last-child {
+#tnmnzhisyl .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#vzrrhqwasl .gt_row {
+#tnmnzhisyl .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3911,7 +3912,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#vzrrhqwasl .gt_stub {
+#tnmnzhisyl .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3923,7 +3924,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#vzrrhqwasl .gt_stub_row_group {
+#tnmnzhisyl .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3936,13 +3937,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#vzrrhqwasl .gt_row_group_first td {
+#tnmnzhisyl .gt_row_group_first td {
 border-top-width: 2px;
 }
-#vzrrhqwasl .gt_row_group_first th {
+#tnmnzhisyl .gt_row_group_first th {
 border-top-width: 2px;
 }
-#vzrrhqwasl .gt_summary_row {
+#tnmnzhisyl .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -3951,14 +3952,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#vzrrhqwasl .gt_first_summary_row {
+#tnmnzhisyl .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_first_summary_row.thick {
+#tnmnzhisyl .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#vzrrhqwasl .gt_last_summary_row {
+#tnmnzhisyl .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3967,7 +3968,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_grand_summary_row {
+#tnmnzhisyl .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -3976,7 +3977,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#vzrrhqwasl .gt_first_grand_summary_row {
+#tnmnzhisyl .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3985,7 +3986,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_last_grand_summary_row_top {
+#tnmnzhisyl .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3994,10 +3995,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_striped {
+#tnmnzhisyl .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#vzrrhqwasl .gt_table_body {
+#tnmnzhisyl .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -4005,7 +4006,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_footnotes {
+#tnmnzhisyl .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -4018,7 +4019,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_footnote {
+#tnmnzhisyl .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -4026,7 +4027,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#vzrrhqwasl .gt_sourcenotes {
+#tnmnzhisyl .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -4039,57 +4040,57 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#vzrrhqwasl .gt_sourcenote {
+#tnmnzhisyl .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#vzrrhqwasl .gt_left {
+#tnmnzhisyl .gt_left {
 text-align: left;
 }
-#vzrrhqwasl .gt_center {
+#tnmnzhisyl .gt_center {
 text-align: center;
 }
-#vzrrhqwasl .gt_right {
+#tnmnzhisyl .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#vzrrhqwasl .gt_font_normal {
+#tnmnzhisyl .gt_font_normal {
 font-weight: normal;
 }
-#vzrrhqwasl .gt_font_bold {
+#tnmnzhisyl .gt_font_bold {
 font-weight: bold;
 }
-#vzrrhqwasl .gt_font_italic {
+#tnmnzhisyl .gt_font_italic {
 font-style: italic;
 }
-#vzrrhqwasl .gt_super {
+#tnmnzhisyl .gt_super {
 font-size: 65%;
 }
-#vzrrhqwasl .gt_footnote_marks {
+#tnmnzhisyl .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#vzrrhqwasl .gt_asterisk {
+#tnmnzhisyl .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#vzrrhqwasl .gt_indent_1 {
+#tnmnzhisyl .gt_indent_1 {
 text-indent: 5px;
 }
-#vzrrhqwasl .gt_indent_2 {
+#tnmnzhisyl .gt_indent_2 {
 text-indent: 10px;
 }
-#vzrrhqwasl .gt_indent_3 {
+#tnmnzhisyl .gt_indent_3 {
 text-indent: 15px;
 }
-#vzrrhqwasl .gt_indent_4 {
+#tnmnzhisyl .gt_indent_4 {
 text-indent: 20px;
 }
-#vzrrhqwasl .gt_indent_5 {
+#tnmnzhisyl .gt_indent_5 {
 text-indent: 25px;
 }
 </style>
@@ -4367,14 +4368,14 @@ text-indent: 25px;
 <td class="gt_row gt_center" headers="stat_2">1,249 (3.6%)</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="label">    OTHER</td>
-<td class="gt_row gt_center" headers="stat_1">5,160 (14%)</td>
-<td class="gt_row gt_center" headers="stat_2">5,596 (16%)</td>
-</tr>
-<tr class="even">
 <td class="gt_row gt_left" headers="label">    WHITE</td>
 <td class="gt_row gt_center" headers="stat_1">25,939 (68%)</td>
 <td class="gt_row gt_center" headers="stat_2">23,630 (67%)</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">    Other</td>
+<td class="gt_row gt_center" headers="stat_1">5,160 (14%)</td>
+<td class="gt_row gt_center" headers="stat_2">5,596 (16%)</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="label">hospital_expire_flag</td>
@@ -4539,7 +4540,7 @@ text-indent: 25px;
 <td class="gt_row gt_center" headers="stat_2">1</td>
 </tr>
 <tr class="odd">
-<td class="gt_row gt_left" headers="label">age_at_intime</td>
+<td class="gt_row gt_left" headers="label">age_intime</td>
 <td class="gt_row gt_center" headers="stat_1">65 (53, 77)</td>
 <td class="gt_row gt_center" headers="stat_2">67 (56, 78)</td>
 </tr>
@@ -4580,6 +4581,8 @@ text-indent: 25px;
 <section id="q2.-shiny-app" class="level2">
 <h2 class="anchored" data-anchor-id="q2.-shiny-app">Q2. Shiny app</h2>
 <p>Develop a Shiny app for exploring the ICU cohort data created in Q1. The app should reside in the <code>mimiciv_shiny</code> folder. The app should contain at least two tabs. One tab provides easy access to the graphical and numerical summaries of variables (demographics, lab measurements, vitals) in the ICU cohort. The other allows user to choose a specific patient in the cohort and display the patient’s ADT and ICU stay information as we did in Q1 of HW3.</p>
+<p><strong>Answer</strong></p>
+<p>Please check “app.R” in the <code>mimiciv_shiny</code> folder.</p>
 </section>
 
 </main>

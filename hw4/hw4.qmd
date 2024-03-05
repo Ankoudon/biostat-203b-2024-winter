@@ -58,7 +58,7 @@ Connect to BigQuery database `mimic4_v2_2` in GCP (Google Cloud Platform), using
 ```{r}
 # connect to the BigQuery database `biostat-203b-2024-winter.mimic4_v2_2`
 con_bq <- dbConnect(
-    bigrquery::bigquery(),
+  bigrquery::bigquery(),
     project = "biostat-203b-2024-winter",
     dataset = "mimic4_v2_2",
     billing = "biostat-203b-2024-winter"
@@ -199,8 +199,7 @@ chartevents_tble <- tbl(con_bq, "chartevents") |>
         "non_invasive_blood_pressure_systolic",
         "non_invasive_blood_pressure_diastolic",
         "temperature_fahrenheit",
-        "respiratory_rate")
-      ))) |>
+        "respiratory_rate")))) |>
   select(subject_id,
          stay_id,
          heart_rate,
@@ -223,8 +222,8 @@ mimic_icu_cohort <-
   left_join(admissions_tble, by = c("subject_id", "hadm_id")) |>
   left_join(patients_tble, by = "subject_id") |>
   # (iii) keep adults only (age at ICU intime >= 18) |>
-  mutate(age_at_intime = anchor_age + year(intime) - anchor_year) |>
-  filter(age_at_intime >= 18) |>
+  mutate(age_intime = anchor_age + year(intime) - anchor_year) |>
+  filter(age_intime >= 18) |>
   # (iv) merge in the labevents and chartevents tables
   left_join(labevents_tble, by = c("subject_id", "stay_id")) |>
   left_join(chartevents_tble, by = c("subject_id", "stay_id")) |>
@@ -244,7 +243,6 @@ Hint: Below is a numerical summary of my tibble after preprocessing:
 </iframe>
 
 ```{r}
-# Can i use this mimic_icu_cohort?
 mimic_icu_cohort_pre <- mimic_icu_cohort |>
   mutate(
     first_careunit = fct_lump(first_careunit, n = 4),
@@ -253,19 +251,22 @@ mimic_icu_cohort_pre <- mimic_icu_cohort |>
     admission_location = fct_lump(admission_location, n = 3),
     discharge_location = fct_lump(discharge_location, n = 4),
     los_long = if_else(los >= 2, TRUE, FALSE),
-    # Change later!
-    race = if_else(
-      str_detect(race, "ASIAN"), "ASIAN", if_else(
-        str_detect(race, "WHITE"), "WHITE", if_else(
-          str_detect(race, "BLACK"), "BLACK", if_else(
-            str_detect(race, "HISPANIC"), "HISPANIC", "OTHER"))))) |>
+    race = fct_collapse(
+      race, 
+      ASIAN = mimic_icu_cohort$race[str_detect(mimic_icu_cohort$race, "ASIAN")],
+      WHITE = mimic_icu_cohort$race[str_detect(mimic_icu_cohort$race, "WHITE")],
+      BLACK = mimic_icu_cohort$race[str_detect(mimic_icu_cohort$race, "BLACK")],
+      HISPANIC = mimic_icu_cohort$race[str_detect(mimic_icu_cohort$race,
+                                                  "HISPANIC")],
+      other_level = "Other"
+      )) |>
   select(first_careunit, last_careunit, los, admission_type, admission_location,
          discharge_location,insurance, language, marital_status, 
          race, los_long, hospital_expire_flag, gender, dod, sodium, chloride, 
          creatinine, potassium, glucose, hematocrit, wbc, bicarbonate, 
          temperature_fahrenheit, non_invasive_blood_pressure_diastolic,
          respiratory_rate, non_invasive_blood_pressure_systolic, heart_rate,
-         age_at_intime) |>
+         age_intime) |>
   tbl_summary(by = los_long)
 
 mimic_icu_cohort_pre
@@ -299,3 +300,7 @@ Although it is not a good practice to add big data files to git, for grading pur
 ## Q2. Shiny app
 
 Develop a Shiny app for exploring the ICU cohort data created in Q1. The app should reside in the `mimiciv_shiny` folder. The app should contain at least two tabs. One tab provides easy access to the graphical and numerical summaries of variables (demographics, lab measurements, vitals) in the ICU cohort. The other allows user to choose a specific patient in the cohort and display the patient's ADT and ICU stay information as we did in Q1 of HW3.
+
+**Answer**
+
+Please check "app.R" in the `mimiciv_shiny` folder.
