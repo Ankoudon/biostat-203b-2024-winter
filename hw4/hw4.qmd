@@ -59,9 +59,9 @@ Connect to BigQuery database `mimic4_v2_2` in GCP (Google Cloud Platform), using
 # connect to the BigQuery database `biostat-203b-2024-winter.mimic4_v2_2`
 con_bq <- dbConnect(
   bigrquery::bigquery(),
-    project = "biostat-203b-2024-winter",
-    dataset = "mimic4_v2_2",
-    billing = "biostat-203b-2024-winter"
+  project = "biostat-203b-2024-winter",
+  dataset = "mimic4_v2_2",
+  billing = "biostat-203b-2024-winter"
 )
 con_bq
 ```

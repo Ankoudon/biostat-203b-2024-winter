@@ -9,14 +9,12 @@ library(tidyverse)
 library(gridExtra)
 library(gt)
 library(gtsummary)
-library(shinyWidgets)
 library(shiny)
 
 # Function to calculate mode
 Mode <- function(x) {
   ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
+  ux[which.max(tabulate(match(x, ux)))]}
 
 mimic_icu_cohort <- readRDS("./mimic_icu_cohort.rds") 
 
@@ -29,8 +27,7 @@ con_bq <- dbConnect(
   bigrquery::bigquery(),
   project = "biostat-203b-2024-winter",
   dataset = "mimic4_v2_2",
-  billing = "biostat-203b-2024-winter"
-)
+  billing = "biostat-203b-2024-winter")
 
 mimic_icu_cohort_pre <- mimic_icu_cohort |>
   mutate(
@@ -47,8 +44,7 @@ mimic_icu_cohort_pre <- mimic_icu_cohort |>
       BLACK = mimic_icu_cohort$race[str_detect(mimic_icu_cohort$race, "BLACK")],
       HISPANIC = mimic_icu_cohort$race[str_detect(mimic_icu_cohort$race,
                                                   "HISPANIC")],
-      other_level = "Other"
-    )) |>
+      other_level = "Other")) |>
   select(first_careunit, last_careunit, los, admission_type, admission_location,
          discharge_location,insurance, language, marital_status, 
          race, los_long, hospital_expire_flag, gender, dod, sodium, chloride, 
@@ -128,10 +124,9 @@ lab_los <- mimic_icu_cohort |>
     y = "Length of ICU stay")
 
 vital_los <- mimic_icu_cohort |>
-  select(
-    los, heart_rate, non_invasive_blood_pressure_systolic,
-    non_invasive_blood_pressure_diastolic, temperature_fahrenheit,
-    respiratory_rate) |>
+  select(los, heart_rate, non_invasive_blood_pressure_systolic,
+         non_invasive_blood_pressure_diastolic, temperature_fahrenheit,
+         respiratory_rate) |>
   rename("NBPd" = non_invasive_blood_pressure_diastolic,
          "NBPs" = non_invasive_blood_pressure_systolic,
          "HR" = heart_rate,
@@ -152,47 +147,35 @@ ui <- fluidPage(
   titlePanel("203B-HW4-Shiny App"),
   
   tabsetPanel(
-    
     tabPanel("Patient characteristics",
              sidebarPanel(
                selectInput("v_patient", "Summary",
                            c("demographics" = "demographics",
                              "lab measurements" = "lab",
-                             "vitals" = "vitals"
-                             ))),
+                             "vitals" = "vitals"))),
              mainPanel(
                gt_output("tbl_patient"),
-               plotOutput("plot_patient")
-               )
-             ),
+               plotOutput("plot_patient"))),
     tabPanel("Patient's ADT and ICU stay information",
-             
-             numericInput("numeric_input", "SUBJECT ID:", value = 10013310),
-             
+             selectizeInput("numeric_input", "SUBJECT ID:",
+                            choices = NULL,
+                            selected = 10013310, multiple = FALSE),
              mainPanel(
                plotOutput("plot_adt"),
-               plotOutput("plot_icu")
-               ))
-    ))
+               plotOutput("plot_icu")))))
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+  updateSelectizeInput(session, 'numeric_input',
+                       choices = mimic_icu_cohort_pre$subject_id, server = TRUE)
   
   v_1_gg <- function(type) {
-    
     if (type == "demographics") {
-      
       grid.arrange(a, b, c, d, e, ncol = 3)
-      
       } else if (type == "lab") {
-        
         lab_los
-        
         } else if (type == "vitals") {
-          
-          vital_los
-          
-        }
-    }
+          vital_los}}
   
   v_1_tbl <- function(type) {
     
@@ -224,44 +207,31 @@ server <- function(input, output) {
           tab_header(title = "Summary of Meam Values")
         
         } else if (type == "vitals") {
-          
           mean_table <- mimic_icu_cohort_pre |>
             select(
               heart_rate, non_invasive_blood_pressure_systolic,
               non_invasive_blood_pressure_diastolic, temperature_fahrenheit,
               respiratory_rate) |>
-        rename("NBPd" = non_invasive_blood_pressure_diastolic,
-               "NBPs" = non_invasive_blood_pressure_systolic,
-               "HR" = heart_rate,
-               "Temperature F" = temperature_fahrenheit,
-               "RR" = respiratory_rate) |>
+            rename("NBPd" = non_invasive_blood_pressure_diastolic,
+                   "NBPs" = non_invasive_blood_pressure_systolic,
+                   "HR" = heart_rate,
+                   "Temperature F" = temperature_fahrenheit,
+                   "RR" = respiratory_rate) |>
             na.omit() |>
             summarise_all(~ round(median(., na.rm = TRUE), digits = 1)) |>
             gt() |>
             tab_header(
-              title = "Summary of Median Values"
-            )
-        }
-    }
+              title = "Summary of Median Values")}}
   
   output$plot_patient <- renderPlot({
-    
-    v_1_gg(input$v_patient)
-    
-    })
+    v_1_gg(input$v_patient)})
   
   output$tbl_patient <- render_gt({
-    
-    v_1_tbl(input$v_patient)
-    
-    })
+    v_1_tbl(input$v_patient)})
   
   gg_adt <- function(sub_id) {
-    
     patient_id = sub_id
-    
     if (patient_id %in% patients_tbl$subject_id) {
-      
       patients <- patients_tbl |>
         filter(subject_id == patient_id)
       
@@ -366,31 +336,28 @@ server <- function(input, output) {
                             "years old, ", patient_race),
              x = "Calendar Time",
              subtitle = paste0(
-               diagnose_1, "\n", diagnose_2, "\n", diagnose_3
-               )
-             ) +
+               diagnose_1, "\n", diagnose_2, "\n", diagnose_3)) +
         scale_y_discrete(limits = c("Procedure", "Lab", "ADT"))
       
       } else {
         ggplot() +
           geom_blank() +
           theme_bw() +
-          labs(title = "NULL")
-      }}
+          labs(title = "NULL")}}
   
   output$plot_adt <- renderPlot({
-    gg_adt(input$numeric_input)
-    })
+    gg_adt(as.integer(input$numeric_input))})
   
   gg_icu <- function(patient_id) {
     
-    icustays <- tbl(con_bq, "icustays") |>
-      filter(subject_id == patient_id) |>
-      select(hadm_id, stay_id) |>
-      collect() |>
-      distinct()
-    
-    if (patient_id %in% patients_tbl$subject_id && nrow(icustays) > 0) {
+    #if (patient_id %in% patients_tbl$subject_id & nrow(icustays) > 0) {
+    if (patient_id %in% patients_tbl$subject_id) {
+      
+      icustays <- tbl(con_bq, "icustays") |>
+        filter(subject_id == patient_id) |>
+        select(hadm_id, stay_id) |>
+        collect() |>
+        distinct()
       
       labevents <- tbl(con_bq, "chartevents") |>
         select(subject_id, itemid, charttime, hadm_id, valuenum) |>
@@ -409,34 +376,25 @@ server <- function(input, output) {
                                 color = as.factor(abbreviation))) +
         geom_point(data = labevents,
                    mapping = aes(x = charttime, y = valuenum,
-                                 color = as.factor(abbreviation)),
-                   size = 1) +
+                                 color = as.factor(abbreviation)), size = 1) +
         facet_grid(abbreviation ~ stay_id, scales = "free") +
         theme_light() +
         guides(color = "none",
                x = guide_axis(n.dodge = 2)) +
         theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
-        scale_x_datetime(labels = scales::date_format("%b %d %H:%M")) + 
+        scale_x_datetime(labels = scales::date_format("%b %d %H:%M")) +
         labs(title = paste0("Patient ", patient_id, " ICU stays - Vitals"))
       
       } else {
-        
         ggplot() +
           geom_blank() +
           theme_bw() +
-          labs(title = "NULL")
-      }
-    
-    }
+          labs(title = "NULL")}}
   
   output$plot_icu <- renderPlot({
-    
-    gg_icu(input$numeric_input)}
-    
-  )
-  
-  }
+    gg_icu(as.integer(input$numeric_input))})}
 
 # Run the application 
 
 shinyApp(ui = ui, server = server)
+
