@@ -1,3 +1,7 @@
+# Written by Hiroyasu Ando
+# UID: 605948443
+# Date: 20240308
+
 rm(list = ls())
 
 library(bigrquery)
