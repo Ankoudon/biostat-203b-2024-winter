@@ -45,7 +45,7 @@ Using the ICU cohort `mimiciv_icu_cohort.rds` you built in Homework 4, develop a
 1. Data preprocessing and feature engineering.
 
 ```{r, message=FALSE}
-mimic_icu_cohort_raw <- readRDS("./mimic_icu_cohort.rds") 
+mimic_icu_cohort_raw <- readRDS("../hw4/mimiciv_shiny/mimic_icu_cohort.rds") 
 
 mimic_icu_cohort_pre <- mimic_icu_cohort_raw |>
   mutate(
