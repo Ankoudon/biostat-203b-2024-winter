@@ -50,7 +50,6 @@ mimic_icu_cohort_raw <- readRDS("../hw4/mimiciv_shiny/mimic_icu_cohort.rds")
 mimic_icu_cohort_pre <- mimic_icu_cohort_raw |>
   mutate(
     first_careunit = fct_lump(first_careunit, n = 4),
-    last_careunit = fct_lump(last_careunit, n = 4),
     los_long = if_else(los >= 2, as.factor(1), as.factor(0)),
     race = fct_collapse(
       race, 
@@ -64,7 +63,7 @@ mimic_icu_cohort_pre <- mimic_icu_cohort_raw |>
                                                       "HISPANIC")],
       other_level = "Other")) |>
   select(gender, age_intime, marital_status, race, first_careunit,
-         last_careunit, los_long, sodium, chloride,
+         los_long, sodium, chloride,
          creatinine, potassium, glucose, hematocrit, wbc, bicarbonate,
          temperature_fahrenheit, non_invasive_blood_pressure_diastolic,
          respiratory_rate, non_invasive_blood_pressure_systolic, heart_rate,
@@ -135,7 +134,7 @@ logit_mod <-
     penalty = tune(),
     mixture = tune()
     ) |>
-  set_engine("glmnet", standardize = FALSE)
+  set_engine("glmnet", standardize = TRUE)
 
 logit_wf <- workflow() |>
   add_recipe(mimic_icu_cohort_recipe) |>
@@ -155,14 +154,14 @@ logit_fit <- logit_wf |>
     grid = logit_param_grid,
     metrics = metric_set(roc_auc, accuracy))
 
-logit_fit |>
-  collect_metrics() |>
+#logit_fit |>
+  #collect_metrics() |>
   #print(width = Inf) |>
-  filter(.metric == "roc_auc") |>
-  ggplot(mapping = aes(x = penalty, y = mean, color = factor(mixture))) +
-  geom_point() +
-  labs(x = "Penalty", y = "CV AUC") +
-  scale_x_log10()
+  #filter(.metric == "roc_auc") |>
+  #ggplot(mapping = aes(x = penalty, y = mean, color = factor(mixture))) +
+  #geom_point() +
+  #labs(x = "Penalty", y = "CV AUC") +
+  #scale_x_log10()
 
 best_logit <- logit_fit |>
   select_best("roc_auc")
@@ -187,7 +186,7 @@ rf_mod <-
     mtry = tune(),
     trees = tune()
     ) |>
-  set_engine("ranger")
+  set_engine("ranger", importance = "impurity")
 
 rf_wf <- workflow() |>
   add_recipe(mimic_icu_cohort_recipe) |>
@@ -207,13 +206,13 @@ rf_fit <- rf_wf |>
     grid = rf_param_grid,
     metrics = metric_set(roc_auc, accuracy))
 
-rf_fit |>
-  collect_metrics() |>
+#rf_fit |>
+  #collect_metrics() |>
   #print(width = Inf) |>
-  filter(.metric == "roc_auc") |>
-  ggplot(mapping = aes(x = trees, y = mean, color = factor(mtry))) +
-  geom_point() + 
-  labs(x = "Num. of Trees", y = "CV AUC")
+  #filter(.metric == "roc_auc") |>
+  #ggplot(mapping = aes(x = trees, y = mean, color = factor(mtry))) +
+  #geom_point() + 
+  #labs(x = "Num. of Trees", y = "CV AUC")
 
 best_rf <- rf_fit |>
   select_best("roc_auc")
@@ -259,14 +258,14 @@ gb_fit <- gb_wf |>
     grid = gb_param_grid,
     metrics = metric_set(roc_auc, accuracy))
 
-gb_fit |>
-  collect_metrics() |>
+#gb_fit |>
+  #collect_metrics() |>
   #print(width = Inf) |>
-  filter(.metric == "roc_auc") |>
-  ggplot(mapping = aes(x = learn_rate, y = mean, color = factor(tree_depth))) +
-  geom_point() +
-  labs(x = "Learning Rate", y = "CV AUC") +
-  scale_x_log10()
+  #filter(.metric == "roc_auc") |>
+  #ggplot(mapping = aes(x = learn_rate, y = mean, color = factor(tree_depth))) +
+  #geom_point() +
+  #labs(x = "Learning Rate", y = "CV AUC") +
+  #scale_x_log10()
 
 best_gb <- gb_fit |>
   select_best("roc_auc")
@@ -289,7 +288,7 @@ gb_final_fit <-
 ```{r}
 # Logsitic regression
 # Accuracy: ~ 0.573
-# AUC: 0.596
+# AUC: 0.594
 
 logit_final_fit |> 
   collect_metrics()
@@ -297,8 +296,8 @@ logit_final_fit |>
 
 ```{r}
 # Random forest
-# Accuracy: ~ 0.582
-# AUC: 0.614
+# Accuracy: ~ 0.579
+# AUC: 0.609
 
 rf_final_fit |> 
   collect_metrics()
@@ -306,8 +305,8 @@ rf_final_fit |>
 
 ```{r}
 # XGBoost
-# Accuracy: ~ 0.6
-# AUC: 0.641
+# Accuracy: ~ 0.593
+# AUC: 0.631
 
 gb_final_fit |> 
   collect_metrics()
@@ -317,8 +316,8 @@ gb_final_fit |>
 
 ```{r, message=FALSE, warning = FALSE}
 # Stacking model
-# Accuracy: ~ 0.604
-# AUC: 0.644
+# Accuracy: ~ 0.595
+# AUC: 0.634
 
 logit_res <-
   tune_grid(
@@ -370,7 +369,34 @@ yardstick::accuracy(
 
 **Interpretation**
 
-The stacking model has better accuracy and AUC than the three individual models. Based on the coefficients of the stacking model, random forest and XGBoost help improve predictions. Based on this discussion, the most important feature in predicting long-term ICU stays may be the decision tree, which implies a nonliner and complex relationship.
+For each model, the most important features in predicting long ICU stays are as follows:
+
+Logistic regression : whether patients have Medical/Surgical Intensive Care Unit (MICU/SICU) as their first care unite.
+
+Random forest : hematocrit 
+
+XGBoost : temperature fahrenheit
+
+```{r}
+# Logistic regression
+logit_final_wf |> fit(mimiciv_icu_cohort_other) |>
+  extract_fit_parsnip() %>%
+  tidy() |>
+  print(n = Inf)
+
+# Random forest
+rf_final_wf |> fit(mimiciv_icu_cohort_other) |>
+  extract_fit_parsnip() |>
+  vip::vi() 
+
+# XGBoost
+gb_final_wf |> 
+  fit(mimiciv_icu_cohort_other) |>
+  extract_fit_parsnip() |> 
+  vip::vi() 
+```
+
+The stacking model has better accuracy and AUC than the three individual models. Based on the coefficients of the stacking model, random forest and XGBoost help improve predictions, compared to logistic regression. Considering this discussion, the most important feature in predicting long-term ICU stays may be the decision tree, which implies a non-liner and complex relationship.
 
 ```{r}
 #autoplot(mimiciv_icu_cohort_model_st)
@@ -381,7 +407,7 @@ autoplot(mimiciv_icu_cohort_model_st, type = "weights")
 
 **Performance and interpretability**
 
-The stacking model has the best performance in terms of accuracy and AUC, but is difficult to interpret. In contrast, each model used in the stacking model is easier to interpret, but does not have good performance in terms of precision and AUC. In terms of individual models, the random forest and XGBoost models have better performance than logistic regression, but are harder to interpret due to complexity and non-linearity. The logistic regression model has the worst performance, but is interpretable due to its simplicity and linearity.
+The stacking model has the best performance in terms of accuracy and AUC, but is difficult to interpret. In contrast, each model used in the stacking model is easier to interpret, but does not have good performance in terms of accuracy and AUC. As for the individual models, the random forest and XGBoost models have better performance than logistic regression, but are harder to interpret due to complexity and non-linearity. The logistic regression model has the worst performance, but is interpretable due to its simplicity and linearity.
 
 ```{r}
 mimiciv_icu_cohort_pred <-
