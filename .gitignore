@@ -50,3 +50,17 @@ rsconnect/
 
 # .DS_Store
 .DS_Store
+
+# hw1
+pg42671.txt
+
+# hw3
+chartevents_pq
+labevents_pq
+
+# hw4
+biostat-203b-2024-winter-313290ce47a6.json
+
+# hw5
+mimic_icu_cohort.rds
+
